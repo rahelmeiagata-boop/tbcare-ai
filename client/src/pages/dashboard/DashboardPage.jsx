@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import {Home, PlusCircle, Camera, Users, MessageSquare, Settings, BellPlus, ChevronRight, HeartPulse, QrCode, FileEdit, Bot, Award, Pill,} from 'lucide-react';
+import {Home, PlusCircle, Camera, Users, MessageSquare, Settings, BellPlus, ChevronRight, HeartPulse, QrCode, FileEdit, Bot, Award, Pill,
+} from 'lucide-react';
 
 const WhatsAppIcon = ({ className }) => (
   <svg viewBox="0 0 32 32" fill="currentColor" className={className}>
@@ -211,7 +212,7 @@ export default function DashboardPage() {
 
                   <div className="flex-1 flex items-end mt-6">
                     <button className="group w-full bg-gradient-to-r from-teal-600 to-teal-400 text-white font-semibold py-3.5 rounded-full shadow-md hover:opacity-90 transition-all flex items-center justify-center gap-1">
-                      Lihat Jadwal Selengkapnya
+                      Lihat Jadwa Selengkapnya
                       <ChevronRight className="w-4 h-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                     </button>
                   </div>

@@ -1,18 +1,9 @@
 import { useState } from 'react';
-import { X, Eye, EyeOff, Users } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { X, Eye, EyeOff } from 'lucide-react';
 
-function PersonIllustrationPlaceholder({ className = '' }) {
-  return (
-    <div
-      className={`flex flex-col items-center justify-center gap-1 rounded-full border-2 border-dashed border-slate-300 bg-slate-100 text-center ${className}`}
-    >
-      <Users className="h-8 w-8 text-slate-400" strokeWidth={1.5} />
-      <span className="text-xs font-medium text-slate-400">Foto</span>
-    </div>
-  );
-}
-
-export default function LoginPage({ onClose }) {
+export default function LoginPage() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
 
@@ -23,8 +14,8 @@ export default function LoginPage({ onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: sambungkan ke logic autentikasi / API Anda
-    console.log('Login submitted:', formData);
+   
+    navigate('/dashboard');
   };
 
   return (
@@ -34,14 +25,13 @@ export default function LoginPage({ onClose }) {
     >
       <div className="w-full max-w-xl rounded-3xl border border-slate-100 bg-white p-8 shadow-xl sm:p-10">
 
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Tutup"
-          className="rounded-full p-1 text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+        <Link
+          to="/"
+          aria-label="Kembali ke Beranda"
+          className="inline-flex rounded-full p-1 text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
         >
           <X size={22} strokeWidth={2.5} />
-        </button>
+        </Link>
 
         <div className="mt-6">
           <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">
@@ -56,10 +46,14 @@ export default function LoginPage({ onClose }) {
           onSubmit={handleSubmit}
           className="mt-8 flex flex-col items-center gap-6 sm:flex-row"
         >
-          <PersonIllustrationPlaceholder className="h-36 w-36 shrink-0 sm:h-40 sm:w-40" />
+          <img
+            src="/assets/login-illustration.png"
+            alt="Login Illustration"
+            className="h-36 w-36 shrink-0 rounded-full object-cover sm:h-40 sm:w-40"
+          />
 
           <div className="flex w-full flex-1 flex-col gap-5">
-
+   
             <div>
               <label
                 htmlFor="email"
@@ -110,12 +104,12 @@ export default function LoginPage({ onClose }) {
               </div>
 
               <div className="mt-2 text-right">
-                <a
-                  href="#lupa-password"
+                <Link
+                  to="/reset-password"
                   className="text-xs font-medium text-slate-600 transition hover:text-blue-500 sm:text-sm"
                 >
                   Lupa password?
-                </a>
+                </Link>
               </div>
             </div>
 
@@ -128,12 +122,12 @@ export default function LoginPage({ onClose }) {
 
             <p className="text-center text-sm text-slate-700 sm:text-base">
               Belum punya akun?{' '}
-              <a
-                href="#daftar"
+              <Link
+                to="/register"
                 className="font-semibold text-teal-500 transition hover:text-teal-600"
               >
                 Daftar di sini
-              </a>
+              </Link>
             </p>
           </div>
         </form>
