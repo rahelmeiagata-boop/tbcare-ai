@@ -218,7 +218,7 @@ function AboutSection() {
   return (
     <section id="tentang" className="bg-slate-50 py-16 lg:py-24">
       <div className="mx-auto max-w-3xl px-6 text-center lg:px-12">
-        <h2 className="text-3xl font-extrabold text-slate-900 sm:text-4xl">TBCare AI</h2>
+        <h2 className="text-3xl font-extrabold text-slate-900 sm:text-4xl">Tentang TBCare AI</h2>
         <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
           TBCare AI adalah platform pendamping digital berbasis kecerdasan buatan (Artificial Intelligence)
           yang dirancang untuk membantu pasien Tuberkulosis (TBC) menjalani pengobatan secara lebih mudah, teratur, dan terpantau.
