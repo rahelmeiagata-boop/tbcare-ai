@@ -2,9 +2,27 @@ import { errorResponse } from "./response.js";
 import { MESSAGES } from "../constants/messages.js";
 
 export const validateRegister = (req, res, next) => {
-  const { fullname, email, password } = req.body;
+  const {
+    nama,
+    email,
+    password,
+    nomor_hp,
+    tanggal_lahir,
+    jenis_kelamin,
+    alamat,
+    role,
+  } = req.body;
 
-  if (!fullname || !email || !password) {
+  if (
+    !nama ||
+    !email ||
+    !password ||
+    !nomor_hp ||
+    !tanggal_lahir ||
+    !jenis_kelamin ||
+    !alamat ||
+    !role
+  ) {
     return errorResponse(
       res,
       MESSAGES.REGISTER_FIELDS_REQUIRED,

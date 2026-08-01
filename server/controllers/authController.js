@@ -29,6 +29,7 @@ export const login = async (req, res) => {
       result
     );
   } catch (err) {
-    errorResponse(res, err.message);
+  console.error(err);
+  errorResponse(res, err.message);
   }
 };
