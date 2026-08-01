@@ -27,6 +27,7 @@ CREATE TABLE `ai_predictions` (
   `scan_id` int NOT NULL,
   `recommended_schedule` text,
   `prediction_score` float DEFAULT NULL,
+  `generated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `scan_id` (`scan_id`),
   CONSTRAINT `ai_predictions_ibfk_1` FOREIGN KEY (`scan_id`) REFERENCES `prescription_scans` (`id`) ON DELETE CASCADE
@@ -120,10 +121,35 @@ CREATE TABLE `medications` (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
   `med_name` varchar(100) NOT NULL,
+  `dosage` varchar(50) DEFAULT NULL,
+  `frequency` varchar(50) DEFAULT NULL,
+  `duration_days` int DEFAULT NULL,
   `stock` int NOT NULL,
+  `consumption_rule` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `medications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `notifications`
+--
+
+DROP TABLE IF EXISTS `notifications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `notifications` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `message` text NOT NULL,
+  `channel` enum('whatsapp','telegram') NOT NULL DEFAULT 'whatsapp',
+  `status` enum('terkirim','gagal','menunggu') NOT NULL DEFAULT 'menunggu',
+  `sent_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -158,6 +184,7 @@ CREATE TABLE `prescription_scans` (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
   `image_path` varchar(255) NOT NULL,
+  `scan_status` enum('pending','processed','confirmed','failed') DEFAULT 'pending',
   `uploaded_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
@@ -197,4 +224,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-07-31 22:40:21
+-- Dump completed on 2026-08-01 17:11:42
