@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { X, Eye, EyeOff } from 'lucide-react';
+import { login } from "../../services/authService";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -12,11 +13,38 @@ export default function LoginPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-   
-    navigate('/dashboard');
-  };
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    const response = await login(
+      formData.email,
+      formData.password
+    );
+
+    localStorage.setItem(
+      "token",
+      response.data.token
+    );
+
+    localStorage.setItem(
+      "nama",
+      response.data.user.nama
+    );
+
+    navigate("/dashboard");
+  } catch (err) {
+  console.log(err);
+  console.log(err.response);
+  console.log(err.response?.data);
+
+  alert(
+    err.response?.data?.message ||
+    err.message ||
+    "Login gagal"
+  );
+  }
+};
 
   return (
     <div
