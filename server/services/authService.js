@@ -74,10 +74,15 @@ export const loginUser = async (email, password) => {
     user.password
   );
 
+  console.log("PASSWORD INPUT :", password);
+  console.log("PASSWORD HASH  :", user.password);
+  console.log("MATCH :", match);
+
   if (!match) {
     throw new Error(MESSAGES.INVALID_CREDENTIALS);
   }
 
+  // Generate JWT
   const token = generateToken({
     id: user.id,
     nama: user.nama,
