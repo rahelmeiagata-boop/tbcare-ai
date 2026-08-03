@@ -1,5 +1,6 @@
 import toast from "react-hot-toast";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   getMedications,
   createMedication,
@@ -8,6 +9,7 @@ import {
 } from "../../../services/medicationService";
 
 const MedicineContent = () => {
+  const navigate = useNavigate();
   const [medications, setMedications] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -144,52 +146,63 @@ const MedicineContent = () => {
           Belum ada data obat.
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-lg shadow">
-          <table className="w-full border border-gray-300 bg-white">
-            <thead className="bg-blue-50">
-              <tr>
-                <th className="border p-3">Nama Obat</th>
-                <th className="border p-3">Dosis</th>
-                <th className="border p-3">Frekuensi</th>
-                <th className="border p-3">Durasi</th>
-                <th className="border p-3">Stok</th>
-                <th className="border p-3">Aksi</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {medications.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="border p-3">{item.med_name}</td>
-                  <td className="border p-3">{item.dosage}</td>
-                  <td className="border p-3">{item.frequency}</td>
-                  <td className="border p-3">
-                    {item.duration_days} Hari
-                  </td>
-                  <td className="border p-3">{item.stock}</td>
-
-                  <td className="border p-3">
-                    <div className="flex gap-2 justify-center">
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
-                      >
-                        Edit
-                      </button>
-
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
-                      >
-                        Hapus
-                      </button>
-                    </div>
-                  </td>
+        <>
+          <div className="overflow-x-auto rounded-lg shadow">
+            <table className="w-full border border-gray-300 bg-white">
+              <thead className="bg-blue-50">
+                <tr>
+                  <th className="border p-3">Nama Obat</th>
+                  <th className="border p-3">Dosis</th>
+                  <th className="border p-3">Frekuensi</th>
+                  <th className="border p-3">Durasi</th>
+                  <th className="border p-3">Stok</th>
+                  <th className="border p-3">Aksi</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+
+              <tbody>
+                {medications.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="border p-3">{item.med_name}</td>
+                    <td className="border p-3">{item.dosage}</td>
+                    <td className="border p-3">{item.frequency}</td>
+                    <td className="border p-3">
+                      {item.duration_days} Hari
+                    </td>
+                    <td className="border p-3">{item.stock}</td>
+
+                    <td className="border p-3">
+                      <div className="flex gap-2 justify-center">
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={() => navigate("/routine")}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-semibold"
+            >
+              ✨ Buat Jadwal dengan AI
+            </button>
+          </div>
+        </>
       )}
 
       {showModal && (

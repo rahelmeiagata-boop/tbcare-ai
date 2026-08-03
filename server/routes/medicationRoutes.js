@@ -6,6 +6,7 @@ import {
   getById,
   update,
   remove,
+  take,
 } from "../controllers/medicationController.js";
 
 import { authenticate } from "../middleware/authMiddleware.js";
@@ -40,6 +41,12 @@ router.delete(
   "/:id",
   authenticate,
   remove
+);
+
+router.post(
+  "/take/:scheduleId",
+  authenticate,
+  take
 );
 
 export default router;

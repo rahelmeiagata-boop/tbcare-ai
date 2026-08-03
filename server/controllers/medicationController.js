@@ -4,6 +4,7 @@ import {
   getMedicationById,
   updateMedication,
   deleteMedication,
+  takeMedicine,
 } from "../services/medicationService.js";
 
 import {
@@ -90,6 +91,22 @@ export const remove = async (req, res) => {
     successResponse(
       res,
       "Data obat berhasil dihapus."
+    );
+  } catch (err) {
+    errorResponse(res, err.message);
+  }
+};
+
+export const take = async (req, res) => {
+  try {
+    await takeMedicine(
+      req.params.scheduleId,
+      req.user.id
+    );
+
+    successResponse(
+      res,
+      "Obat berhasil diminum."
     );
   } catch (err) {
     errorResponse(res, err.message);

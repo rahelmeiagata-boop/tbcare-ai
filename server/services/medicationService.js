@@ -33,6 +33,23 @@ export const createMedication = async (userId, data) => {
     ]
   );
 
+  console.log("INSERT MEDICATION:", result.insertId);
+
+  await db.execute(
+    `INSERT INTO medication_schedules
+    (
+      medication_id,
+      scheduled_time
+    )
+    VALUES (?, ?)`,
+    [
+      result.insertId,
+      "07:00:00",
+    ]
+  );
+
+  console.log("INSERT SCHEDULE BERHASIL");
+
   return getMedicationById(result.insertId, userId);
 };
 
@@ -77,14 +94,14 @@ export const updateMedication = async (
   await db.execute(
     `UPDATE medications
      SET
-      med_name=?,
-      dosage=?,
-      frequency=?,
-      duration_days=?,
-      stock=?,
-      consumption_rule=?
-     WHERE id=?
-     AND user_id=?`,
+       med_name = ?,
+       dosage = ?,
+       frequency = ?,
+       duration_days = ?,
+       stock = ?,
+       consumption_rule = ?
+     WHERE id = ?
+     AND user_id = ?`,
     [
       med_name,
       dosage,
@@ -105,10 +122,32 @@ export const deleteMedication = async (
   userId
 ) => {
   await db.execute(
-    `DELETE
-     FROM medications
-     WHERE id=?
-     AND user_id=?`,
+    `DELETE FROM medications
+     WHERE id = ?
+     AND user_id = ?`,
     [id, userId]
   );
+};
+
+export const takeMedicine = async (
+  scheduleId,
+  userId
+) => {
+
+  await db.execute(
+    `INSERT INTO medication_logs
+    (
+      schedule_id,
+      status,
+      taken_at
+    )
+    VALUES
+    (
+      ?,
+      'taken',
+      NOW()
+    )`,
+    [scheduleId]
+  );
+
 };
