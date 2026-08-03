@@ -127,11 +127,11 @@ export default function DashboardPage() {
                 console.log("DATA DASHBOARD:", data);
 
                 setJumlahHariKepatuhan(
-                    data.taken_logs?.[0]?.total || 0
+                    data.total_taken || 0
                 );
 
                 setSisaObat(
-                    data.total_medications?.[0]?.total || 0
+                    data.total_medications || 0
                 );
 
                 setJadwalHariIni(
