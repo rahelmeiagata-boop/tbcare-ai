@@ -81,6 +81,7 @@ DROP TABLE IF EXISTS `medication_logs`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `medication_logs` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `schedule_id` int DEFAULT NULL,
   `user_id` int NOT NULL,
   `medication_id` int NOT NULL,
   `taken_at` datetime NOT NULL,
@@ -88,8 +89,10 @@ CREATE TABLE `medication_logs` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   KEY `medication_id` (`medication_id`),
+  KEY `schedule_id` (`schedule_id`),
   CONSTRAINT `medication_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `medication_logs_ibfk_2` FOREIGN KEY (`medication_id`) REFERENCES `medications` (`id`) ON DELETE CASCADE
+  CONSTRAINT `medication_logs_ibfk_2` FOREIGN KEY (`medication_id`) REFERENCES `medications` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `medication_logs_ibfk_3` FOREIGN KEY (`schedule_id`) REFERENCES `medication_schedules` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -104,6 +107,9 @@ CREATE TABLE `medication_schedules` (
   `id` int NOT NULL AUTO_INCREMENT,
   `medication_id` int NOT NULL,
   `scheduled_time` time NOT NULL,
+  `meal_type` enum('sebelum_makan','sesudah_makan','saat_makan','tidak_terkait') DEFAULT 'tidak_terkait',
+  `recommended_by_ai` tinyint(1) DEFAULT '0',
+  `user_modified` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `medication_id` (`medication_id`),
   CONSTRAINT `medication_schedules_ibfk_1` FOREIGN KEY (`medication_id`) REFERENCES `medications` (`id`) ON DELETE CASCADE
@@ -193,6 +199,27 @@ CREATE TABLE `prescription_scans` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `user_routines`
+--
+
+DROP TABLE IF EXISTS `user_routines`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `user_routines` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `wake_up` time DEFAULT NULL,
+  `breakfast_time` time DEFAULT NULL,
+  `lunch_time` time DEFAULT NULL,
+  `dinner_time` time DEFAULT NULL,
+  `sleep_time` time DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `user_routines_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `users`
 --
 
@@ -224,4 +251,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-08-01 17:11:42
+-- Dump completed on 2026-08-03 23:34:09
