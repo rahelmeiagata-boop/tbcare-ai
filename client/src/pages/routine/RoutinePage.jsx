@@ -1,12 +1,18 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+
+import { saveRoutine } from "../../services/routineService";
 
 const RoutinePage = () => {
+  const navigate = useNavigate();
+
   const [routine, setRoutine] = useState({
-    wake_up: "06:00",
-    breakfast: "07:00",
-    lunch: "12:30",
-    dinner: "19:00",
-    sleep: "22:00",
+    wake_time: "06:00",
+    breakfast_time: "07:00",
+    lunch_time: "12:30",
+    dinner_time: "19:00",
+    sleep_time: "22:00",
   });
 
   const handleChange = (e) => {
@@ -16,15 +22,27 @@ const RoutinePage = () => {
     });
   };
 
-  const handleNext = () => {
-    console.log(routine);
+  const handleNext = async () => {
+  try {
+    console.log("DATA YANG DIKIRIM:", routine);
 
-    // Nanti kita arahkan ke Recommendation Page
-  };
+    const response = await saveRoutine(routine);
+
+    console.log(response);
+
+    toast.success("Rutinitas berhasil disimpan.");
+    navigate("/recommendation");
+  } catch (err) {
+    console.log("FULL ERROR:", err);
+    console.log("RESPONSE:", err.response);
+    console.log("DATA:", err.response?.data);
+
+    toast.error("Gagal menyimpan rutinitas.");
+  }
+};
 
   return (
     <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg p-8">
-
       <h1 className="text-3xl font-bold text-blue-700 mb-2">
         🤖 AI Scheduler
       </h1>
@@ -43,8 +61,8 @@ const RoutinePage = () => {
 
           <input
             type="time"
-            name="wake_up"
-            value={routine.wake_up}
+            name="wake_time"
+            value={routine.wake_time}
             onChange={handleChange}
             className="w-full border rounded-lg p-3 mt-2"
           />
@@ -57,8 +75,8 @@ const RoutinePage = () => {
 
           <input
             type="time"
-            name="breakfast"
-            value={routine.breakfast}
+            name="breakfast_time"
+            value={routine.breakfast_time}
             onChange={handleChange}
             className="w-full border rounded-lg p-3 mt-2"
           />
@@ -71,8 +89,8 @@ const RoutinePage = () => {
 
           <input
             type="time"
-            name="lunch"
-            value={routine.lunch}
+            name="lunch_time"
+            value={routine.lunch_time}
             onChange={handleChange}
             className="w-full border rounded-lg p-3 mt-2"
           />
@@ -85,8 +103,8 @@ const RoutinePage = () => {
 
           <input
             type="time"
-            name="dinner"
-            value={routine.dinner}
+            name="dinner_time"
+            value={routine.dinner_time}
             onChange={handleChange}
             className="w-full border rounded-lg p-3 mt-2"
           />
@@ -94,13 +112,13 @@ const RoutinePage = () => {
 
         <div>
           <label className="font-medium">
-          Jam Tidur
+            Jam Tidur
           </label>
 
           <input
             type="time"
-            name="sleep"
-            value={routine.sleep}
+            name="sleep_time"
+            value={routine.sleep_time}
             onChange={handleChange}
             className="w-full border rounded-lg p-3 mt-2"
           />
@@ -112,9 +130,8 @@ const RoutinePage = () => {
         onClick={handleNext}
         className="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold"
       >
-        Lanjutkan
+        ✨ Lihat Rekomendasi AI
       </button>
-
     </div>
   );
 };

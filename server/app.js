@@ -8,6 +8,8 @@ import profileRoutes from "./routes/profileRoutes.js";
 import medicationRoutes from "./routes/medicationRoutes.js";
 import scheduleRoutes from "./routes/scheduleRoutes.js";
 import logRoutes from "./routes/logRoutes.js";
+import routineRoutes from "./routes/routineRoutes.js";
+import recommendationRoutes from "./routes/recommendationRoutes.js";
 
 dotenv.config();
 
@@ -22,6 +24,11 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/medications", medicationRoutes);
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/logs", logRoutes);
+app.use("/api/routines", routineRoutes);
+app.use(
+  "/api/recommendation",
+  recommendationRoutes
+);
 
 app.get("/", (req, res) => {
   res.json({
