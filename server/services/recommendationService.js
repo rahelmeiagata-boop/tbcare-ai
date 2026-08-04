@@ -115,7 +115,13 @@ export const saveRecommendation = async (userId) => {
   const result = await generateRecommendation(userId);
 
   for (const med of result.medications) {
-    await db.execute(
+
+    console.log("================================");
+    console.log("MED :", med.med_name);
+    console.log("MEDICATION ID :", med.id);
+    console.log("TIME :", med.recommended_time);
+
+    const [updateResult] = await db.execute(
       `
       UPDATE medication_schedules
       SET scheduled_time = ?
@@ -126,6 +132,8 @@ export const saveRecommendation = async (userId) => {
         med.id,
       ]
     );
+
+    console.log("UPDATE RESULT :", updateResult);
   }
 
   return true;

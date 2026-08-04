@@ -1,20 +1,34 @@
 import db from "../config/db.js";
 
+console.log("DASHBOARD SERVICE BARU LOADED");
+
 export const getDashboardData = async (userId) => {
   console.log("================================");
   console.log("USER ID :", userId);
 
   // Jadwal obat
   const [todaySchedule] = await db.execute(
-    `SELECT
-        ms.id,
-        ms.scheduled_time,
-        m.med_name
-     FROM medication_schedules ms
-     JOIN medications m
-       ON ms.medication_id = m.id
-     WHERE m.user_id = ?
-     ORDER BY ms.scheduled_time ASC`,
+    `
+    SELECT
+      ms.id,
+      ms.scheduled_time,
+      m.med_name,
+      COALESCE(
+        (
+          SELECT ml.status
+          FROM medication_logs ml
+          WHERE ml.schedule_id = ms.id
+          ORDER BY ml.id DESC
+          LIMIT 1
+        ),
+        'pending'
+      ) AS status
+    FROM medication_schedules ms
+    JOIN medications m
+      ON ms.medication_id = m.id
+    WHERE m.user_id = ?
+    ORDER BY ms.scheduled_time ASC
+    `,
     [userId]
   );
 
@@ -22,25 +36,29 @@ export const getDashboardData = async (userId) => {
 
   // Total obat
   const [totalMedication] = await db.execute(
-    `SELECT COUNT(*) AS total
-     FROM medications
-     WHERE user_id = ?`,
+    `
+    SELECT COUNT(*) AS total
+    FROM medications
+    WHERE user_id = ?
+    `,
     [userId]
   );
 
   console.log("TOTAL MEDICATION :", totalMedication);
 
-  // Total log diminum
+  // Total obat yang sudah diminum
   const [takenLogs] = await db.execute(
-    `SELECT COUNT(*) AS total
-     FROM medication_logs ml
-     JOIN medication_schedules ms
-       ON ml.schedule_id = ms.id
-     JOIN medications m
-       ON ms.medication_id = m.id
-     WHERE
-       m.user_id = ?
-       AND ml.status = 'taken'`,
+    `
+    SELECT COUNT(DISTINCT ml.schedule_id) AS total
+    FROM medication_logs ml
+    JOIN medication_schedules ms
+      ON ml.schedule_id = ms.id
+    JOIN medications m
+      ON ms.medication_id = m.id
+    WHERE
+      m.user_id = ?
+      AND ml.status = 'taken'
+    `,
     [userId]
   );
 
