@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 
 import { getDashboard } from "../../services/dashboardService";
+import { createLog } from "../../services/logService";
+
 
 const WhatsAppIcon = ({ className }) => (
     <svg viewBox="0 0 32 32" fill="currentColor" className={className}>
@@ -116,6 +118,8 @@ export default function DashboardPage() {
     const [activeTab, setActiveTab] = useState("Dashboard");
     const [sisaObat, setSisaObat] = useState(0);
     const [jumlahHariKepatuhan, setJumlahHariKepatuhan] = useState(0);
+
+    const [totalObatHariIni, setTotalObatHariIni] = useState(0);
     const [jadwalHariIni, setJadwalHariIni] = useState([]);
 
     useEffect(() => {
@@ -139,8 +143,15 @@ export default function DashboardPage() {
                         id: item.id,
                         waktu: item.scheduled_time.slice(0, 5),
                         namaObat: item.med_name,
-                        status: "Belum Minum",
+                        status:
+                            item.status === "taken"
+                                ? "Sudah Minum"
+                                : "Belum Minum",
                     }))
+                );
+
+                setTotalObatHariIni(
+                    data.total_medications || 0
                 );
             } catch (error) {
                 console.error("Dashboard Error:", error);
@@ -149,28 +160,50 @@ export default function DashboardPage() {
 
         fetchDashboard();
     }, []);
-    const progresPersentase = useMemo(() => {
-        return Math.min(
-            100,
-            Math.round((jumlahHariKepatuhan / TOTAL_HARI_PROGRAM) * 100)
-        );
-    }, [jumlahHariKepatuhan]);
+   const progresPersentase = useMemo(() => {
+    if (totalObatHariIni === 0) return 0;
 
-    const handleMinumObat = (id) => {
-        const target = jadwalHariIni.find((item) => item.id === id);
+    return Math.round(
+        (jumlahHariKepatuhan / totalObatHariIni) * 100
+    );
+}, [jumlahHariKepatuhan, totalObatHariIni]);
 
-        if (!target || target.status !== "Belum Minum") return;
-
-        setJadwalHariIni((prev) =>
-            prev.map((item) =>
-                item.id === id
-                    ? { ...item, status: "Sudah Minum" }
-                    : item
-            )
+    const handleMinumObat = async (id) => {
+        const target = jadwalHariIni.find(
+            (item) => item.id === id
         );
 
-        setSisaObat((prev) => Math.max(0, prev - 1));
-        setJumlahHariKepatuhan((prev) => prev + 1);
+        if (!target || target.status !== "Belum Minum")
+            return;
+
+        try {
+            await createLog(
+                target.id,
+                "taken"
+            );
+
+            setJadwalHariIni((prev) =>
+                prev.map((item) =>
+                    item.id === id
+                        ? {
+                            ...item,
+                            status: "Sudah Minum",
+                        }
+                        : item
+                )
+            );
+
+            setSisaObat((prev) =>
+                Math.max(0, prev - 1)
+            );
+
+            setJumlahHariKepatuhan(
+                (prev) => prev + 1
+            );
+
+        } catch (err) {
+            console.error(err);
+        }
     };
 
     const currentHeader = HEADER_CONTENT[activeTab];
