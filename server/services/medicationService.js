@@ -1,5 +1,34 @@
 import db from "../config/db.js";
 
+const addMinutes = (time, minutes) => {
+  const [hour, minute] = time.split(":").map(Number);
+
+  const date = new Date();
+
+  date.setHours(hour);
+  date.setMinutes(minute + minutes);
+  date.setSeconds(0);
+
+  return date.toTimeString().slice(0, 8);
+};
+
+const generateScheduleTimes = (selectedSchedules, routine) => {
+  const mapping = {
+    before_breakfast: addMinutes(routine.breakfast_time, -30),
+    after_breakfast: addMinutes(routine.breakfast_time, 30),
+
+    before_lunch: addMinutes(routine.lunch_time, -30),
+    after_lunch: addMinutes(routine.lunch_time, 30),
+
+    before_dinner: addMinutes(routine.dinner_time, -30),
+    after_dinner: addMinutes(routine.dinner_time, 30),
+
+    before_sleep: addMinutes(routine.sleep_time, -30),
+  };
+
+  return selectedSchedules.map((item) => mapping[item]);
+};
+
 export const createMedication = async (userId, data) => {
   const {
     med_name,
@@ -8,6 +37,7 @@ export const createMedication = async (userId, data) => {
     duration_days,
     stock,
     consumption_rule,
+    consumption_schedule,
   } = data;
 
   const [result] = await db.execute(
@@ -19,9 +49,10 @@ export const createMedication = async (userId, data) => {
       frequency,
       duration_days,
       stock,
-      consumption_rule
+      consumption_rule,
+      consumption_schedule
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       userId,
       med_name,
@@ -30,51 +61,93 @@ export const createMedication = async (userId, data) => {
       duration_days,
       stock,
       consumption_rule,
+      JSON.stringify(consumption_schedule),
     ]
   );
 
-  console.log("INSERT MEDICATION:", result.insertId);
+  const medicationId = result.insertId;
 
-  await db.execute(
-    `INSERT INTO medication_schedules
-    (
-      medication_id,
-      scheduled_time
-    )
-    VALUES (?, ?)`,
-    [
-      result.insertId,
-      "07:00:00",
-    ]
+  const [routineRows] = await db.execute(
+    `
+    SELECT *
+    FROM user_routines
+    WHERE user_id = ?
+    `,
+    [userId]
   );
 
-  console.log("INSERT SCHEDULE BERHASIL");
+  if (routineRows.length > 0) {
+    const routine = routineRows[0];
 
-  return getMedicationById(result.insertId, userId);
+    const schedules = generateScheduleTimes(
+      consumption_schedule,
+      routine
+    );
+
+    for (const time of schedules) {
+      await db.execute(
+        `
+        INSERT INTO medication_schedules
+        (
+          medication_id,
+          scheduled_time
+        )
+        VALUES (?, ?)
+        `,
+        [medicationId, time]
+      );
+    }
+  }
+
+  return getMedicationById(medicationId, userId);
 };
 
 export const getAllMedications = async (userId) => {
   const [rows] = await db.execute(
-    `SELECT *
-     FROM medications
-     WHERE user_id = ?
-     ORDER BY id DESC`,
+    `
+    SELECT *
+    FROM medications
+    WHERE user_id = ?
+    ORDER BY id DESC
+    `,
     [userId]
   );
 
-  return rows;
+  return rows.map((item) => {
+
+  console.log(item.med_name);
+  console.log(item.consumption_schedule);
+
+  return {
+    ...item,
+    consumption_schedule:
+      typeof item.consumption_schedule === "string"
+        ? JSON.parse(item.consumption_schedule)
+        : item.consumption_schedule ?? [],
+  };
+});
 };
 
 export const getMedicationById = async (id, userId) => {
   const [rows] = await db.execute(
-    `SELECT *
-     FROM medications
-     WHERE id = ?
-     AND user_id = ?`,
+    `
+    SELECT *
+    FROM medications
+    WHERE id = ?
+    AND user_id = ?
+    `,
     [id, userId]
   );
 
-  return rows[0];
+  if (!rows.length) return null;
+
+  return {
+    ...rows[0],
+    consumption_schedule:
+  typeof rows[0].consumption_schedule === "string"
+    ? JSON.parse(rows[0].consumption_schedule)
+    : rows[0].consumption_schedule ?? [],
+  };
 };
 
 export const updateMedication = async (
@@ -89,19 +162,23 @@ export const updateMedication = async (
     duration_days,
     stock,
     consumption_rule,
+    consumption_schedule,
   } = data;
 
   await db.execute(
-    `UPDATE medications
-     SET
-       med_name = ?,
-       dosage = ?,
-       frequency = ?,
-       duration_days = ?,
-       stock = ?,
-       consumption_rule = ?
-     WHERE id = ?
-     AND user_id = ?`,
+    `
+    UPDATE medications
+    SET
+      med_name=?,
+      dosage=?,
+      frequency=?,
+      duration_days=?,
+      stock=?,
+      consumption_rule=?,
+      consumption_schedule=?
+    WHERE id=?
+    AND user_id=?
+    `,
     [
       med_name,
       dosage,
@@ -109,33 +186,68 @@ export const updateMedication = async (
       duration_days,
       stock,
       consumption_rule,
+      JSON.stringify(consumption_schedule),
       id,
       userId,
     ]
   );
 
+  await db.execute(
+    `
+    DELETE FROM medication_schedules
+    WHERE medication_id=?
+    `,
+    [id]
+  );
+
+  const [routineRows] = await db.execute(
+    `
+    SELECT *
+    FROM user_routines
+    WHERE user_id=?
+    `,
+    [userId]
+  );
+
+  if (routineRows.length > 0) {
+    const schedules = generateScheduleTimes(
+      consumption_schedule,
+      routineRows[0]
+    );
+
+    for (const time of schedules) {
+      await db.execute(
+        `
+        INSERT INTO medication_schedules
+        (
+          medication_id,
+          scheduled_time
+        )
+        VALUES (?, ?)
+        `,
+        [id, time]
+      );
+    }
+  }
+
   return getMedicationById(id, userId);
 };
 
-export const deleteMedication = async (
-  id,
-  userId
-) => {
+export const deleteMedication = async (id, userId) => {
   await db.execute(
-    `DELETE FROM medications
-     WHERE id = ?
-     AND user_id = ?`,
+    `
+    DELETE FROM medications
+    WHERE id=?
+    AND user_id=?
+    `,
     [id, userId]
   );
 };
 
-export const takeMedicine = async (
-  scheduleId,
-  userId
-) => {
-
+export const takeMedicine = async (scheduleId) => {
   await db.execute(
-    `INSERT INTO medication_logs
+    `
+    INSERT INTO medication_logs
     (
       schedule_id,
       status,
@@ -146,8 +258,8 @@ export const takeMedicine = async (
       ?,
       'taken',
       NOW()
-    )`,
+    )
+    `,
     [scheduleId]
   );
-
 };

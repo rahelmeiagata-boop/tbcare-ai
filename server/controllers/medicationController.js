@@ -13,7 +13,12 @@ import {
 } from "../utils/response.js";
 
 export const create = async (req, res) => {
+  console.log("MASUK CONTROLLER");
+  console.log(req.body);
+
   try {
+    console.log(req.body);
+
     const result = await createMedication(
       req.user.id,
       req.body
@@ -26,15 +31,15 @@ export const create = async (req, res) => {
       201
     );
   } catch (err) {
+    console.log(err);
+
     errorResponse(res, err.message);
   }
 };
 
 export const getAll = async (req, res) => {
   try {
-    const result = await getAllMedications(
-      req.user.id
-    );
+    const result = await getAllMedications(req.user.id);
 
     successResponse(
       res,
@@ -42,7 +47,13 @@ export const getAll = async (req, res) => {
       result
     );
   } catch (err) {
-    errorResponse(res, err.message);
+    console.error(err);
+
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+      stack: err.stack,
+    });
   }
 };
 

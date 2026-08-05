@@ -8,6 +8,19 @@ import {
   deleteMedication,
 } from "../../../services/medicationService";
 
+const RULE_OPTIONS = [
+  { value: "before_breakfast", label: "Sebelum Sarapan" },
+  { value: "after_breakfast", label: "Sesudah Sarapan" },
+
+  { value: "before_lunch", label: "Sebelum Makan Siang" },
+  { value: "after_lunch", label: "Sesudah Makan Siang" },
+
+  { value: "before_dinner", label: "Sebelum Makan Malam" },
+  { value: "after_dinner", label: "Sesudah Makan Malam" },
+
+  { value: "before_sleep", label: "Sebelum Tidur" },
+];
+
 const MedicineContent = () => {
   const navigate = useNavigate();
   const [medications, setMedications] = useState([]);
@@ -23,6 +36,7 @@ const MedicineContent = () => {
     duration_days: "",
     stock: "",
     consumption_rule: "",
+    consumption_schedule: [],
   });
 
   useEffect(() => {
@@ -42,16 +56,31 @@ const MedicineContent = () => {
   };
 
   const handleSubmit = async () => {
+
+    const max = parseInt(formData.frequency);
+
+    if (
+      !isNaN(max) &&
+      formData.consumption_schedule.length !== max
+    ) {
+      toast.error(`Pilih tepat ${max} waktu minum obat.`);
+      return;
+    }
+
     try {
 
       if (editingId) {
+
         await updateMedication(editingId, formData);
 
         toast.success("Obat berhasil diperbarui.");
+
       } else {
+
         await createMedication(formData);
 
         toast.success("Obat berhasil ditambahkan.");
+
       }
 
       setShowModal(false);
@@ -65,31 +94,73 @@ const MedicineContent = () => {
         duration_days: "",
         stock: "",
         consumption_rule: "",
+        consumption_schedule: [],
       });
 
       fetchMedications();
 
     } catch (err) {
+
       console.error(err);
+
       toast.error("Gagal menyimpan obat.");
+
     }
+
   };
+
+  const RULE_OPTIONS = [
+    {
+      value: "before_breakfast",
+      label: "Sebelum Sarapan",
+    },
+    {
+      value: "after_breakfast",
+      label: "Sesudah Sarapan",
+    },
+    {
+      value: "before_lunch",
+      label: "Sebelum Makan Siang",
+    },
+    {
+      value: "after_lunch",
+      label: "Sesudah Makan Siang",
+    },
+    {
+      value: "before_dinner",
+      label: "Sebelum Makan Malam",
+    },
+    {
+      value: "after_dinner",
+      label: "Sesudah Makan Malam",
+    },
+    {
+      value: "before_sleep",
+      label: "Sebelum Tidur",
+    },
+  ];
 
   if (loading) {
     return <h2>Loading...</h2>;
   }
 
   const handleEdit = (item) => {
+    console.log(item);
+    console.log(item.consumption_schedule);
+    console.log(typeof item.consumption_schedule);
+
     setEditingId(item.id);
 
     setFormData({
-      med_name: item.med_name,
-      dosage: item.dosage,
-      frequency: item.frequency,
-      duration_days: item.duration_days,
-      stock: item.stock,
-      consumption_rule: item.consumption_rule,
-    });
+  med_name: item.med_name,
+  dosage: item.dosage,
+  frequency: item.frequency,
+  duration_days: item.duration_days,
+  stock: item.stock,
+  consumption_rule: item.consumption_rule,
+  consumption_schedule:
+    item.consumption_schedule || [],
+});
 
     setShowModal(true);
   };
@@ -131,6 +202,7 @@ const MedicineContent = () => {
               duration_days: "",
               stock: "",
               consumption_rule: "",
+              consumption_schedule: [],
             });
 
             setShowModal(true);
@@ -227,6 +299,22 @@ const MedicineContent = () => {
                 }
               />
 
+              <select
+                className="w-full border rounded-lg p-3"
+                value={formData.frequency}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    frequency: Number(e.target.value),
+                  })
+                }
+              >
+                <option value="">Pilih Frekuensi</option>
+                <option value={1}>1x Sehari</option>
+                <option value={2}>2x Sehari</option>
+                <option value={3}>3x Sehari</option>
+              </select>
+
               <input
                 className="w-full border rounded-lg p-3"
                 placeholder="Dosis"
@@ -235,18 +323,6 @@ const MedicineContent = () => {
                   setFormData({
                     ...formData,
                     dosage: e.target.value,
-                  })
-                }
-              />
-
-              <input
-                className="w-full border rounded-lg p-3"
-                placeholder="Frekuensi"
-                value={formData.frequency}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    frequency: e.target.value,
                   })
                 }
               />
@@ -277,17 +353,69 @@ const MedicineContent = () => {
                 }
               />
 
-              <input
-                className="w-full border rounded-lg p-3"
-                placeholder="Aturan Konsumsi"
-                value={formData.consumption_rule}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    consumption_rule: e.target.value,
-                  })
-                }
-              />
+              <div className="border rounded-lg p-4">
+
+                <p className="font-semibold mb-3">
+                  Pilih Waktu Minum Obat
+                </p>
+
+                <div className="grid grid-cols-2 gap-3">
+
+                  {RULE_OPTIONS.map((rule) => {
+
+                    const checked = formData.consumption_schedule.includes(rule.value);
+                    const maxSelected =
+                      formData.consumption_schedule.length >= parseInt(formData.frequency);
+
+                    return (
+
+                      <label
+                        key={rule.value}
+                        className="flex items-center gap-2"
+                      >
+
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={!checked && maxSelected}
+                          onChange={(e) => {
+
+                            if (e.target.checked) {
+
+                              setFormData({
+                                ...formData,
+                                consumption_schedule: [
+                                  ...formData.consumption_schedule,
+                                  rule.value,
+                                ],
+                              });
+
+                            } else {
+
+                              setFormData({
+                                ...formData,
+                                consumption_schedule:
+                                  formData.consumption_schedule.filter(
+                                    (item) => item !== rule.value
+                                  ),
+                              });
+
+                            }
+
+                          }}
+                        />
+
+                        {rule.label}
+
+                      </label>
+
+                    );
+
+                  })}
+
+                </div>
+
+              </div>
 
             </div>
 

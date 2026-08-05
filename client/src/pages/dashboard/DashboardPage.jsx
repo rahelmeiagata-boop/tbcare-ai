@@ -79,10 +79,20 @@ const MENU_ITEMS = [
     { id: 'Pengaturan', label: 'Pengaturan', icon: Settings },
 ];
 
+const getGreeting = () => {
+    const hour = new Date().getHours();
+
+    if (hour < 12) return "Selamat Pagi";
+    if (hour < 15) return "Selamat Siang";
+    if (hour < 18) return "Selamat Sore";
+
+    return "Selamat Malam";
+};
+
 const HEADER_CONTENT = {
     Dashboard: {
-        title: 'HALO, PENGGUNA!',
-        subtitle: 'Tetap Semangat! Konsistensi minum obat kunci kesembuhan',
+        title: '',
+        subtitle: 'Tetap Semangat! Konsistensi minum obat adalah kunci kesembuhan.',
     },
     'Obat Saya': {
         title: 'OBAT SAYA',
@@ -117,10 +127,17 @@ export default function DashboardPage() {
 
     const [activeTab, setActiveTab] = useState("Dashboard");
     const [sisaObat, setSisaObat] = useState(0);
-    const [jumlahHariKepatuhan, setJumlahHariKepatuhan] = useState(0);
 
-    const [totalObatHariIni, setTotalObatHariIni] = useState(0);
+    const [progress, setProgress] = useState(0);
+    const [therapyDay, setTherapyDay] = useState(0);
+    const [streak, setStreak] = useState(0);
+
     const [jadwalHariIni, setJadwalHariIni] = useState([]);
+
+    const [showScheduleModal, setShowScheduleModal] = useState(false);
+    const [search, setSearch] = useState("");
+    const [filterStatus, setFilterStatus] = useState("Semua");
+
 
     useEffect(() => {
         const fetchDashboard = async () => {
@@ -130,13 +147,13 @@ export default function DashboardPage() {
 
                 console.log("DATA DASHBOARD:", data);
 
-                setJumlahHariKepatuhan(
-                    data.total_taken || 0
-                );
+                setProgress(data.progress || 0);
 
-                setSisaObat(
-                    data.total_medications || 0
-                );
+                setTherapyDay(data.therapy_day || 0);
+
+                setStreak(data.streak || 0);
+
+                setSisaObat(data.total_stock || 0);
 
                 setJadwalHariIni(
                     (data.today_schedule || []).map((item) => ({
@@ -149,10 +166,6 @@ export default function DashboardPage() {
                                 : "Belum Minum",
                     }))
                 );
-
-                setTotalObatHariIni(
-                    data.total_medications || 0
-                );
             } catch (error) {
                 console.error("Dashboard Error:", error);
             }
@@ -160,13 +173,6 @@ export default function DashboardPage() {
 
         fetchDashboard();
     }, []);
-   const progresPersentase = useMemo(() => {
-    if (totalObatHariIni === 0) return 0;
-
-    return Math.round(
-        (jumlahHariKepatuhan / totalObatHariIni) * 100
-    );
-}, [jumlahHariKepatuhan, totalObatHariIni]);
 
     const handleMinumObat = async (id) => {
         const target = jadwalHariIni.find(
@@ -197,16 +203,30 @@ export default function DashboardPage() {
                 Math.max(0, prev - 1)
             );
 
-            setJumlahHariKepatuhan(
-                (prev) => prev + 1
-            );
+            setTherapyDay((prev) => prev + 1);
 
         } catch (err) {
             console.error(err);
         }
     };
 
+    const filteredSchedule = jadwalHariIni.filter((item) => {
+
+        const cocokNama = item.namaObat
+            .toLowerCase()
+            .includes(search.toLowerCase());
+
+        const cocokStatus =
+            filterStatus === "Semua"
+                ? true
+                : item.status === filterStatus;
+
+        return cocokNama && cocokStatus;
+    });
+
     const currentHeader = HEADER_CONTENT[activeTab];
+    const namaUser =
+        localStorage.getItem("nama") || "Pengguna";
 
     return (
         <div className="min-h-screen w-full flex bg-slate-100" style={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -246,7 +266,11 @@ export default function DashboardPage() {
                 {/* Header */}
                 <header className="flex items-center justify-between px-10 py-8">
                     <div>
-                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">{currentHeader.title}</h1>
+                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+                            {activeTab === "Dashboard"
+                                ? `${getGreeting()}, ${namaUser}! 👋`
+                                : currentHeader.title}
+                        </h1>
                         <p className="text-gray-500 text-sm mt-1">{currentHeader.subtitle}</p>
                     </div>
                     <div className="flex items-center gap-5">
@@ -270,39 +294,49 @@ export default function DashboardPage() {
 
                                 <div className="col-span-12 lg:col-span-7 bg-white rounded-3xl shadow-sm p-7 flex flex-col">
                                     <h2 className="text-xl font-bold text-gray-900">Jadwal Hari Ini</h2>
-                                    <p className="text-gray-400 text-sm mt-1 mb-5">Sabtu, 18 Juli 2026</p>
+                                    <p className="text-gray-400 text-sm mt-1 mb-5">{new Date().toLocaleDateString("id-ID", {
+                                        weekday: "long",
+                                        day: "numeric",
+                                        month: "long",
+                                        year: "numeric",
+                                    })}</p>
 
                                     <div className="border border-gray-200 rounded-xl overflow-hidden">
-                                        {jadwalHariIni.map((item, idx) => (
-                                            <div
-                                                key={item.id}
-                                                className={`flex items-stretch text-sm ${idx !== jadwalHariIni.length - 1 ? 'border-b border-gray-200' : ''
-                                                    }`}
-                                            >
-                                                <div className="w-20 shrink-0 px-4 py-3.5 border-r border-gray-200 text-gray-700 font-medium flex items-center">
-                                                    {item.waktu}
+                                        {jadwalHariIni
+                                            .slice(0, 5)
+                                            .map((item, idx) => (
+                                                <div
+                                                    key={item.id}
+                                                    className={`flex items-stretch text-sm ${idx !== jadwalHariIni.length - 1 ? 'border-b border-gray-200' : ''
+                                                        }`}
+                                                >
+                                                    <div className="w-20 shrink-0 px-4 py-3.5 border-r border-gray-200 text-gray-700 font-medium flex items-center">
+                                                        {item.waktu}
+                                                    </div>
+                                                    <div className="flex-1 px-4 py-3.5 border-r border-gray-200 text-gray-700 font-medium flex items-center">
+                                                        {item.namaObat}
+                                                    </div>
+                                                    <div className="w-36 shrink-0 px-4 py-3.5 flex items-center justify-center">
+                                                        {item.status === 'Belum Minum' ? (
+                                                            <button
+                                                                onClick={() => handleMinumObat(item.id)}
+                                                                className="text-red-500 font-semibold hover:text-red-600 hover:underline transition-colors"
+                                                            >
+                                                                Belum Minum
+                                                            </button>
+                                                        ) : (
+                                                            <span className="text-blue-600 font-semibold">Sudah Minum</span>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <div className="flex-1 px-4 py-3.5 border-r border-gray-200 text-gray-700 font-medium flex items-center">
-                                                    {item.namaObat}
-                                                </div>
-                                                <div className="w-36 shrink-0 px-4 py-3.5 flex items-center justify-center">
-                                                    {item.status === 'Belum Minum' ? (
-                                                        <button
-                                                            onClick={() => handleMinumObat(item.id)}
-                                                            className="text-red-500 font-semibold hover:text-red-600 hover:underline transition-colors"
-                                                        >
-                                                            Belum Minum
-                                                        </button>
-                                                    ) : (
-                                                        <span className="text-blue-600 font-semibold">Sudah Minum</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
+                                            ))}
                                     </div>
 
                                     <div className="flex-1 flex items-end mt-6">
-                                        <button className="group w-full bg-gradient-to-r from-teal-600 to-teal-400 text-white font-semibold py-3.5 rounded-full shadow-md hover:opacity-90 transition-all flex items-center justify-center gap-1">
+                                        <button
+                                            onClick={() => setShowScheduleModal(true)}
+                                            className="group w-full bg-gradient-to-r from-teal-600 to-teal-400 text-white font-semibold py-3.5 rounded-full shadow-md hover:opacity-90 transition-all flex items-center justify-center gap-1"
+                                        >
                                             Lihat Jadwal Selengkapnya
                                             <ChevronRight className="w-4 h-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                                         </button>
@@ -312,10 +346,10 @@ export default function DashboardPage() {
                                 <div className="col-span-6 lg:col-span-2 bg-white rounded-3xl shadow-sm p-6 flex flex-col items-center">
                                     <h2 className="text-base font-bold text-gray-900 self-start mb-4">Progres Terapi</h2>
                                     <div className="flex-1 flex items-center justify-center">
-                                        <CircularProgress percentage={progresPersentase} />
+                                        <CircularProgress percentage={progress} />
                                     </div>
                                     <p className="text-gray-800 font-semibold mt-4 text-sm text-center">
-                                        {jumlahHariKepatuhan}/{TOTAL_HARI_PROGRAM} Hari
+                                        {therapyDay}/{TOTAL_HARI_PROGRAM} Hari
                                     </p>
                                 </div>
 
@@ -325,7 +359,7 @@ export default function DashboardPage() {
                                         <h2 className="text-base font-bold text-gray-900 self-start mb-3">Badge Kepatuhan</h2>
                                         <Award className="w-16 h-16 text-blue-600" strokeWidth={1.5} />
                                         <p className="text-2xl font-extrabold text-gray-900 mt-3">
-                                            {jumlahHariKepatuhan} <span className="text-base font-bold">Hari</span>
+                                            {streak} <span className="text-base font-bold">Hari</span>
                                         </p>
                                         <p className="text-gray-400 text-xs mt-0.5">Berturut-turut</p>
                                     </div>
@@ -392,6 +426,119 @@ export default function DashboardPage() {
                         <SettingsContent />
                     ) : (
                         <DashboardContent />
+                    )}
+
+                    {showScheduleModal && (
+                        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                            <div className="bg-white w-[800px] max-h-[80vh] rounded-3xl shadow-xl p-6 overflow-y-auto">
+
+                                <div className="flex justify-between items-center mb-6">
+
+                                    <h2 className="text-2xl font-bold">
+                                        Jadwal Lengkap
+                                    </h2>
+
+                                    <button
+                                        onClick={() => setShowScheduleModal(false)}
+                                        className="text-gray-500 hover:text-red-500 text-2xl"
+                                    >
+                                        ✕
+                                    </button>
+
+                                </div>
+
+                                <div className="flex justify-between items-center gap-4 mb-6">
+
+                                    <input
+                                        type="text"
+                                        placeholder="Cari obat..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        className="border rounded-xl px-4 py-2 flex-1 outline-none focus:ring-2 focus:ring-teal-500"
+                                    />
+
+                                    <select
+                                        value={filterStatus}
+                                        onChange={(e) => setFilterStatus(e.target.value)}
+                                        className="border rounded-xl px-4 py-2"
+                                    >
+                                        <option>Semua</option>
+                                        <option>Sudah Minum</option>
+                                        <option>Belum Minum</option>
+                                    </select>
+
+                                </div>
+
+                                <table className="w-full">
+
+                                    <thead>
+
+                                        <tr className="border-b">
+
+                                            <th className="py-3 text-left">
+                                                Jam
+                                            </th>
+
+                                            <th className="py-3 text-left">
+                                                Obat
+                                            </th>
+
+                                            <th className="py-3 text-center">
+                                                Status
+                                            </th>
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody>
+
+                                        {filteredSchedule.map((item) => (
+
+                                            <tr
+                                                key={item.id}
+                                                className="border-b"
+                                            >
+
+                                                <td className="py-4">
+                                                    {item.waktu}
+                                                </td>
+
+                                                <td>
+                                                    {item.namaObat}
+                                                </td>
+
+                                                <td className="text-center">
+
+                                                    {item.status === "Belum Minum" ? (
+
+                                                        <button
+                                                            onClick={() => handleMinumObat(item.id)}
+                                                            className="text-red-500 font-semibold hover:underline"
+                                                        >
+                                                            Belum Minum
+                                                        </button>
+
+                                                    ) : (
+
+                                                        <span className="text-blue-600 font-semibold">
+                                                            Sudah Minum
+                                                        </span>
+
+                                                    )}
+
+                                                </td>
+
+                                            </tr>
+
+                                        ))}
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+                        </div>
                     )}
                 </main>
             </div>
