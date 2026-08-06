@@ -115,17 +115,17 @@ export const getAllMedications = async (userId) => {
 
   return rows.map((item) => {
 
-  console.log(item.med_name);
-  console.log(item.consumption_schedule);
+    console.log(item.med_name);
+    console.log(item.consumption_schedule);
 
-  return {
-    ...item,
-    consumption_schedule:
-      typeof item.consumption_schedule === "string"
-        ? JSON.parse(item.consumption_schedule)
-        : item.consumption_schedule ?? [],
-  };
-});
+    return {
+      ...item,
+      consumption_schedule:
+        typeof item.consumption_schedule === "string"
+          ? JSON.parse(item.consumption_schedule)
+          : item.consumption_schedule ?? [],
+    };
+  });
 };
 
 export const getMedicationById = async (id, userId) => {
@@ -144,9 +144,9 @@ export const getMedicationById = async (id, userId) => {
   return {
     ...rows[0],
     consumption_schedule:
-  typeof rows[0].consumption_schedule === "string"
-    ? JSON.parse(rows[0].consumption_schedule)
-    : rows[0].consumption_schedule ?? [],
+      typeof rows[0].consumption_schedule === "string"
+        ? JSON.parse(rows[0].consumption_schedule)
+        : rows[0].consumption_schedule ?? [],
   };
 };
 
@@ -245,6 +245,9 @@ export const deleteMedication = async (id, userId) => {
 };
 
 export const takeMedicine = async (scheduleId) => {
+  console.log("TAKE MEDICINE:", scheduleId);
+
+  // Simpan log
   await db.execute(
     `
     INSERT INTO medication_logs
@@ -262,4 +265,41 @@ export const takeMedicine = async (scheduleId) => {
     `,
     [scheduleId]
   );
+
+  // Cari obat dari jadwal
+  const [rows] = await db.execute(
+    `
+    SELECT medication_id
+    FROM medication_schedules
+    WHERE id = ?
+    `,
+    [scheduleId]
+  );
+
+  console.log("MEDICATION ROW:", rows);
+
+  if (rows.length > 0) {
+
+    await db.execute(
+      `
+      UPDATE medications
+      SET stock = GREATEST(stock - 1, 0)
+      WHERE id = ?
+      `,
+      [rows[0].medication_id]
+    );
+
+    const [check] = await db.execute(
+      `
+    SELECT id, med_name, stock
+    FROM medications
+    WHERE id = ?
+    `,
+      [rows[0].medication_id]
+    );
+
+    console.log("SETELAH UPDATE:", check);
+
+  }
+
 };

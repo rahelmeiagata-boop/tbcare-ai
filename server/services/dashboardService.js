@@ -68,39 +68,41 @@ export const getDashboardData = async (userId) => {
   const [todaySchedule] = await db.execute(
     `
     SELECT
-      ms.id,
-      ms.scheduled_time,
-      m.med_name,
-      COALESCE(
-        (
-          SELECT ml.status
-FROM medication_logs ml
-WHERE
-ml.schedule_id = ms.id
-AND DATE(ml.taken_at)=CURDATE()
-ORDER BY ml.id DESC
-LIMIT 1
-        ),
-        'pending'
-      ) AS status
-    FROM medication_schedules ms
-    JOIN medications m
-      ON ms.medication_id = m.id
-    WHERE m.user_id = ?
-    ORDER BY
+  ms.id,
+  ms.scheduled_time,
+  m.med_name,
+  COALESCE(
+    (
+      SELECT ml.status
+      FROM medication_logs ml
+      WHERE
+        ml.schedule_id = ms.id
+        AND DATE(ml.taken_at) = CURDATE()
+      ORDER BY ml.id DESC
+      LIMIT 1
+    ),
+    'pending'
+  ) AS status
+FROM medication_schedules ms
+JOIN medications m
+  ON ms.medication_id = m.id
+WHERE m.user_id = ?
+ORDER BY
 CASE
-    WHEN COALESCE(
-        (
-            SELECT ml.status
-            FROM medication_logs ml
-            WHERE ml.schedule_id = ms.id
-            ORDER BY ml.id DESC
-            LIMIT 1
-        ),
-        'pending'
-    ) = 'taken'
-    THEN 1
-    ELSE 0
+  WHEN COALESCE(
+    (
+      SELECT ml.status
+      FROM medication_logs ml
+      WHERE
+        ml.schedule_id = ms.id
+        AND DATE(ml.taken_at) = CURDATE()
+      ORDER BY ml.id DESC
+      LIMIT 1
+    ),
+    'pending'
+  ) = 'pending'
+  THEN 0
+  ELSE 1
 END,
 ms.scheduled_time ASC
     `,
@@ -122,19 +124,20 @@ ms.scheduled_time ASC
   console.log("TOTAL STOCK :", stockData);
   console.log("TOTAL STOCK :", stockData);
 
-  // Total obat yang sudah diminum
+  // Total obat yang sudah diminum hari ini
   const [takenLogs] = await db.execute(
     `
-    SELECT COUNT(DISTINCT ml.schedule_id) AS total
-    FROM medication_logs ml
-    JOIN medication_schedules ms
-      ON ml.schedule_id = ms.id
-    JOIN medications m
-      ON ms.medication_id = m.id
-    WHERE
-      m.user_id = ?
-      AND ml.status = 'taken'
-    `,
+  SELECT COUNT(DISTINCT ml.schedule_id) AS total
+  FROM medication_logs ml
+  JOIN medication_schedules ms
+    ON ml.schedule_id = ms.id
+  JOIN medications m
+    ON ms.medication_id = m.id
+  WHERE
+    m.user_id = ?
+    AND ml.status = 'taken'
+    AND DATE(ml.taken_at) = CURDATE()
+  `,
     [userId]
   );
 
@@ -183,21 +186,28 @@ ms.scheduled_time ASC
 
   const totalTaken = takenLogs[0].total;
   const totalStock = stockData[0].total_stock;
+  const totalTodaySchedule = todaySchedule.length;
 
-  const TOTAL_THERAPY_DAYS = 180;
+  const dailyProgress =
+  totalTodaySchedule === 0
+    ? 0
+    : Math.round(
+        (totalTaken / totalTodaySchedule) * 100
+      );
 
-  const progress = Math.min(
-    100,
-    Math.round((therapyDay / TOTAL_THERAPY_DAYS) * 100)
-  );
-
+const therapyProgress = Math.round(
+  (therapyDay / 180) * 100
+);
   return {
-    today_schedule: todaySchedule,
-    total_stock: totalStock,
-    total_taken: totalTaken,
-    progress,
-    streak,
-    therapy_day: therapyDay,
-  };
+  today_schedule: todaySchedule,
+  total_stock: totalStock,
+  total_taken: totalTaken,
+  total_schedule: totalTodaySchedule,
 
+  daily_progress: dailyProgress,
+  therapy_progress: therapyProgress,
+
+  streak,
+  therapy_day: therapyDay,
+};
 };
