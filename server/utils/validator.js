@@ -7,9 +7,6 @@ export const validateRegister = (req, res, next) => {
     email,
     password,
     nomor_hp,
-    tanggal_lahir,
-    jenis_kelamin,
-    alamat,
     role,
   } = req.body;
 
@@ -18,9 +15,6 @@ export const validateRegister = (req, res, next) => {
     !email ||
     !password ||
     !nomor_hp ||
-    !tanggal_lahir ||
-    !jenis_kelamin ||
-    !alamat ||
     !role
   ) {
     return errorResponse(

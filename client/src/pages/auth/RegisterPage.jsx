@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from "react-router-dom";
+import { register } from "../../services/authService";
+import toast from "react-hot-toast";
 import { X, Check } from 'lucide-react';
 import registerIllustration from '../../assets/register-il.png';
 
@@ -25,7 +27,7 @@ function GoogleIcon({ className = '' }) {
     </svg>
   );
 }
- 
+
 function TextField({ label, id, error, className = '', ...inputProps }) {
   return (
     <div>
@@ -41,52 +43,72 @@ function TextField({ label, id, error, className = '', ...inputProps }) {
     </div>
   );
 }
- 
+
 const INITIAL_FORM = {
-  name: '',
-  email: '',
-  phone: '',
-  password: '',
-  confirmPassword: '',
+  name: "",
+  email: "",
+  phone: "",
+  password: "",
+  confirmPassword: "",
+  role: "patient",
 };
- 
+
 export default function RegisterPage() {
   const [formData, setFormData] = useState(INITIAL_FORM);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [passwordError, setPasswordError] = useState('');
- 
+  const navigate = useNavigate();
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
- 
+
     if ((name === 'password' || name === 'confirmPassword') && passwordError) {
       setPasswordError('');
     }
   };
- 
-  const handleSubmit = (e) => {
-    e.preventDefault();
- 
-    if (formData.password !== formData.confirmPassword) {
-      setPasswordError('Password dan Konfirmasi Password tidak cocok.');
-      return;
-    }
- 
-    const { name, email, phone, password } = formData;
-    localStorage.setItem('registeredUser', JSON.stringify({ name, email, phone, password }));
- 
-    alert('Registrasi Berhasil!');
- 
-    setFormData(INITIAL_FORM);
-    setAgreedToTerms(false);
-    setPasswordError('');
-  };
- 
+
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (formData.password !== formData.confirmPassword) {
+    setPasswordError(
+      "Password dan Konfirmasi Password tidak cocok."
+    );
+    return;
+  }
+
+  try {
+    await register({
+  nama: formData.name,
+  email: formData.email,
+  password: formData.password,
+  nomor_hp: formData.phone,
+  role: formData.role,
+  tanggal_lahir: null,
+  jenis_kelamin: null,
+  alamat: null,
+});
+
+    toast.success("Registrasi berhasil.");
+
+    navigate("/login");
+
+  } catch (err) {
+    console.error(err);
+
+    toast.error(
+      err.response?.data?.message ||
+      "Registrasi gagal."
+    );
+  }
+};
+
   const handleGoogleSignIn = () => {
     // TODO: sambungkan ke flow OAuth Google Anda
     console.log('Daftar dengan Google diklik');
   };
- 
+
   return (
     <div
       className="flex min-h-screen w-full items-center justify-center bg-slate-50 px-4 py-10 antialiased sm:px-6"
@@ -100,7 +122,7 @@ export default function RegisterPage() {
         >
           <X size={22} strokeWidth={2.5} />
         </Link>
- 
+
         <div className="mt-6 flex flex-col gap-8 lg:flex-row lg:items-stretch lg:gap-10">
 
           <div className="hidden shrink-0 lg:flex lg:w-56 lg:flex-col lg:justify-end">
@@ -110,7 +132,7 @@ export default function RegisterPage() {
               className="w-full object-contain"
             />
           </div>
- 
+
           <div className="flex-1">
             <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">
               Buat Akun Baru
@@ -118,7 +140,7 @@ export default function RegisterPage() {
             <p className="mt-2 text-sm leading-relaxed text-slate-600 sm:text-base">
               Daftar untuk memulai perjalanan terapi anda bersama TBCare AI
             </p>
- 
+
             <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-5">
               <TextField
                 label="Nama Lengkap"
@@ -131,7 +153,7 @@ export default function RegisterPage() {
                 placeholder="Masukkan Nama Lengkap"
                 autoComplete="name"
               />
- 
+
               <TextField
                 label="Email"
                 id="email"
@@ -143,7 +165,7 @@ export default function RegisterPage() {
                 placeholder="Masukkan Email"
                 autoComplete="email"
               />
- 
+
               <TextField
                 label="Nomor Telepon"
                 id="phone"
@@ -155,7 +177,32 @@ export default function RegisterPage() {
                 placeholder="08xxxxxxx"
                 autoComplete="tel"
               />
- 
+
+              <div>
+                <label
+                  htmlFor="role"
+                  className="mb-2 block text-sm font-bold text-slate-900 sm:text-base"
+                >
+                  Daftar Sebagai
+                </label>
+
+                <select
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-base"
+                >
+                  <option value="patient">
+                    Pasien
+                  </option>
+
+                  <option value="family">
+                    Anggota Keluarga / Pendamping
+                  </option>
+                </select>
+              </div>
+
               <TextField
                 label="Password"
                 id="password"
@@ -168,7 +215,7 @@ export default function RegisterPage() {
                 placeholder="Minimal 8 Karakter"
                 autoComplete="new-password"
               />
- 
+
               <TextField
                 label="Konfirmasi Password"
                 id="confirmPassword"
@@ -182,7 +229,7 @@ export default function RegisterPage() {
                 autoComplete="new-password"
                 error={passwordError}
               />
- 
+
               <label className="flex cursor-pointer items-start gap-3">
                 <input
                   type="checkbox"
@@ -192,9 +239,8 @@ export default function RegisterPage() {
                   className="peer sr-only"
                 />
                 <span
-                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-blue-500 peer-focus-visible:ring-offset-2 ${
-                    agreedToTerms ? 'border-teal-500 bg-teal-500' : 'border-slate-300 bg-white'
-                  }`}
+                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-blue-500 peer-focus-visible:ring-offset-2 ${agreedToTerms ? 'border-teal-500 bg-teal-500' : 'border-slate-300 bg-white'
+                    }`}
                 >
                   {agreedToTerms && <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />}
                 </span>
@@ -215,18 +261,18 @@ export default function RegisterPage() {
                   </a>
                 </span>
               </label>
- 
+
               <button
                 type="submit"
                 className="w-full rounded-lg border border-slate-300 bg-white px-6 py-3.5 text-sm font-bold text-slate-900 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:text-base"
               >
                 Daftar Sekarang
               </button>
- 
+
               <p className="text-center text-sm text-slate-500 sm:text-base">
                 atau daftar dengan
               </p>
- 
+
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
@@ -242,4 +288,4 @@ export default function RegisterPage() {
     </div>
   );
 }
- 
+

@@ -7,6 +7,7 @@ import DashboardPage from "../pages/dashboard/DashboardPage";
 import MedicinePage from "../pages/medicine/MedicinePage";
 import RoutinePage from "../pages/routine/RoutinePage";
 import RecommendationPage from "../pages/recommendation/RecommendationPage";
+import FamilyPage from "../pages/family/FamilyPage";
 
 function AppRoutes() {
   return (
@@ -20,7 +21,10 @@ function AppRoutes() {
 
         <Route path="/dashboard" element={<DashboardPage />} />
 
-        <Route path="/medications" element={<MedicinePage />} />
+        <Route
+          path="/medications"
+          element={<MedicinePage />}
+        />
 
         <Route
           path="/routine"
@@ -30,6 +34,11 @@ function AppRoutes() {
         <Route
           path="/recommendation"
           element={<RecommendationPage />}
+        />
+
+        <Route
+          path="/family"
+          element={<FamilyPage />}
         />
       </Routes>
     </BrowserRouter>

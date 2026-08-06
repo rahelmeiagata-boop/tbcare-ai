@@ -1,6 +1,6 @@
 import DashboardContent from "./components/DashboardContent";
 import MedicineContent from "./components/MedicineContent";
-import FamilyContent from "./components/FamilyContent";
+import FamilyPage from "../family/FamilyPage";
 import ScannerContent from "./components/ScannerContent";
 import ChatContent from "./components/ChatContent";
 import SettingsContent from "./components/SettingsContent";
@@ -457,7 +457,7 @@ export default function DashboardPage() {
                     ) : activeTab === "Obat Saya" ? (
                         <MedicineContent />
                     ) : activeTab === "Family Monitoring" ? (
-                        <FamilyContent />
+                        <FamilyPage />
                     ) : activeTab === "Scanning Resep AI" ? (
                         <ScannerContent />
                     ) : activeTab === "AI Chat Doctor" ? (
