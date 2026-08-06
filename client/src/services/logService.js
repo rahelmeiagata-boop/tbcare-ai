@@ -1,15 +1,8 @@
 import api from "./api";
 
-export const createLog = async (
-  schedule_id,
-  status = "taken"
-) => {
+export const createLog = async (scheduleId) => {
   const response = await api.post(
-    "/logs",
-    {
-      schedule_id,
-      status,
-    }
+    `/medications/take/${scheduleId}`
   );
 
   return response.data;

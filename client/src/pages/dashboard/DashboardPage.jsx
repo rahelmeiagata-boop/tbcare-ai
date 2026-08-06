@@ -128,7 +128,9 @@ export default function DashboardPage() {
     const [activeTab, setActiveTab] = useState("Dashboard");
     const [sisaObat, setSisaObat] = useState(0);
 
-    const [progress, setProgress] = useState(0);
+    const [dailyProgress, setDailyProgress] = useState(0);
+    const [therapyProgress, setTherapyProgress] = useState(0);
+
     const [therapyDay, setTherapyDay] = useState(0);
     const [streak, setStreak] = useState(0);
 
@@ -147,7 +149,8 @@ export default function DashboardPage() {
 
                 console.log("DATA DASHBOARD:", data);
 
-                setProgress(data.progress || 0);
+                setDailyProgress(data.daily_progress || 0);
+                setTherapyProgress(data.therapy_progress || 0);
 
                 setTherapyDay(data.therapy_day || 0);
 
@@ -179,31 +182,36 @@ export default function DashboardPage() {
             (item) => item.id === id
         );
 
-        if (!target || target.status !== "Belum Minum")
+        if (!target || target.status !== "Belum Minum") {
             return;
+        }
 
         try {
-            await createLog(
-                target.id,
-                "taken"
-            );
+            await createLog(target.id);
 
-            setJadwalHariIni((prev) =>
-                prev.map((item) =>
-                    item.id === id
-                        ? {
-                            ...item,
-                            status: "Sudah Minum",
-                        }
-                        : item
-                )
-            );
+            const response = await getDashboard();
+            const data = response.data;
 
-            setSisaObat((prev) =>
-                Math.max(0, prev - 1)
-            );
+            setDailyProgress(data.daily_progress || 0);
+            setTherapyProgress(data.therapy_progress || 0);
 
-            setTherapyDay((prev) => prev + 1);
+            setTherapyDay(data.therapy_day || 0);
+
+            setStreak(data.streak || 0);
+
+            setSisaObat(data.total_stock || 0);
+
+            setJadwalHariIni(
+                (data.today_schedule || []).map((item) => ({
+                    id: item.id,
+                    waktu: item.scheduled_time.slice(0, 5),
+                    namaObat: item.med_name,
+                    status:
+                        item.status === "taken"
+                            ? "Sudah Minum"
+                            : "Belum Minum",
+                }))
+            );
 
         } catch (err) {
             console.error(err);
@@ -343,14 +351,46 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
 
-                                <div className="col-span-6 lg:col-span-2 bg-white rounded-3xl shadow-sm p-6 flex flex-col items-center">
-                                    <h2 className="text-base font-bold text-gray-900 self-start mb-4">Progres Terapi</h2>
-                                    <div className="flex-1 flex items-center justify-center">
-                                        <CircularProgress percentage={progress} />
+                                <div className="col-span-6 lg:col-span-2 bg-white rounded-3xl shadow-sm p-6 flex flex-col">
+
+                                    <h2 className="text-base font-bold text-gray-900 mb-4">
+                                        Progres Terapi
+                                    </h2>
+
+                                    <div className="flex justify-center">
+                                        <CircularProgress percentage={therapyProgress} />
                                     </div>
-                                    <p className="text-gray-800 font-semibold mt-4 text-sm text-center">
+
+                                    <p className="text-gray-800 font-semibold mt-4 text-center">
                                         {therapyDay}/{TOTAL_HARI_PROGRAM} Hari
                                     </p>
+
+                                    <div className="mt-6">
+
+                                        <div className="flex justify-between text-xs font-medium text-gray-500 mb-2">
+                                            <span>Kepatuhan Hari Ini</span>
+                                            <span>{dailyProgress}%</span>
+                                        </div>
+
+                                        <div className="w-full h-3 rounded-full bg-gray-200 overflow-hidden">
+
+                                            <div
+                                                className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 transition-all duration-500"
+                                                style={{
+                                                    width: `${dailyProgress}%`,
+                                                }}
+                                            />
+
+                                        </div>
+
+                                        <p className="text-xs text-gray-400 mt-2 text-center">
+                                            {dailyProgress === 100
+                                                ? "Semua jadwal hari ini telah diselesaikan 🎉"
+                                                : "Selesaikan semua jadwal obat hari ini"}
+                                        </p>
+
+                                    </div>
+
                                 </div>
 
 
