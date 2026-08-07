@@ -8,6 +8,7 @@ import MedicinePage from "../pages/medicine/MedicinePage";
 import RoutinePage from "../pages/routine/RoutinePage";
 import RecommendationPage from "../pages/recommendation/RecommendationPage";
 import FamilyPage from "../pages/family/FamilyPage";
+import FamilyDashboard from "../pages/family/FamilyDashboard";
 
 function AppRoutes() {
   return (
@@ -39,6 +40,11 @@ function AppRoutes() {
         <Route
           path="/family"
           element={<FamilyPage />}
+        />
+
+        <Route
+          path="/family-dashboard"
+          element={<FamilyDashboard />}
         />
       </Routes>
     </BrowserRouter>

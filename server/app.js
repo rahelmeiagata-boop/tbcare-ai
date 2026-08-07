@@ -11,6 +11,7 @@ import logRoutes from "./routes/logRoutes.js";
 import routineRoutes from "./routes/routineRoutes.js";
 import recommendationRoutes from "./routes/recommendationRoutes.js";
 import familyRoutes from "./routes/familyRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -27,6 +28,7 @@ app.use("/api/logs", logRoutes);
 app.use("/api/routines", routineRoutes);
 app.use("/api/recommendation", recommendationRoutes);
 app.use("/api/family", familyRoutes);
+app.use("/api/notification", notificationRoutes);
 
 app.get("/", (req, res) => {
   res.json({

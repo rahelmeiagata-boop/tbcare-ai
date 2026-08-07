@@ -2,6 +2,7 @@ import {
   addFamily,
   getFamilies,
   deleteFamily,
+  getPatient,
 } from "../services/familyService.js";
 
 import {
@@ -60,4 +61,27 @@ export const remove = async (req, res) => {
   } catch (err) {
     errorResponse(res, err.message);
   }
+};
+
+export const patient = async (req, res) => {
+
+  try {
+
+    const result = await getPatient(req.user.id);
+
+    successResponse(
+      res,
+      "Data pasien berhasil diambil.",
+      result
+    );
+
+  } catch (err) {
+
+    errorResponse(
+      res,
+      err.message
+    );
+
+  }
+
 };

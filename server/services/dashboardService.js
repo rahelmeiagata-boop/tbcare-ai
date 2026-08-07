@@ -211,3 +211,43 @@ const therapyProgress = Math.round(
   therapy_day: therapyDay,
 };
 };
+
+export const getFamilyDashboardData = async (familyId) => {
+
+  const [rows] = await db.execute(
+    `
+    SELECT patient_id
+    FROM family_connections
+    WHERE family_id = ?
+    LIMIT 1
+    `,
+    [familyId]
+  );
+
+  if (rows.length === 0) {
+    throw new Error("Anda belum terhubung dengan pasien.");
+  }
+
+  const patientId = rows[0].patient_id;
+
+  const [patientRows] = await db.execute(
+    `
+    SELECT
+      id,
+      nama,
+      email,
+      nomor_hp
+    FROM users
+    WHERE id = ?
+    `,
+    [patientId]
+  );
+
+  const dashboard = await getDashboardData(patientId);
+
+  return {
+    patient: patientRows[0],
+    dashboard,
+  };
+
+};

@@ -4,6 +4,7 @@ import {
   create,
   getAll,
   remove,
+  patient,
 } from "../controllers/familyController.js";
 
 import { authenticate } from "../middleware/authMiddleware.js";
@@ -26,6 +27,12 @@ router.delete(
   "/:id",
   authenticate,
   remove
+);
+
+router.get(
+  "/patient",
+  authenticate,
+  patient
 );
 
 export default router;

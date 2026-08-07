@@ -90,3 +90,29 @@ export const deleteFamily = async (connectionId, patientId) => {
     [connectionId, patientId]
   );
 };
+
+export const getPatient = async (familyId) => {
+
+  const [rows] = await db.execute(
+    `
+    SELECT
+      u.id,
+      u.nama,
+      u.email,
+      u.nomor_hp
+    FROM family_connections fc
+    JOIN users u
+      ON fc.patient_id = u.id
+    WHERE fc.family_id = ?
+    LIMIT 1
+    `,
+    [familyId]
+  );
+
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return rows[0];
+
+};

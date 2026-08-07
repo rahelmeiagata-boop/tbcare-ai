@@ -3,6 +3,12 @@ import { MESSAGES } from "../constants/messages.js";
 
 export const authorize = (...allowedRoles) => {
   return (req, res, next) => {
+
+    console.log("==================================");
+    console.log("ROLE USER :", req.user.role);
+    console.log("ROLE DIIZINKAN :", allowedRoles);
+    console.log("==================================");
+
     const userRole = req.user.role;
 
     if (!allowedRoles.includes(userRole)) {

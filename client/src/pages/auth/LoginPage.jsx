@@ -17,32 +17,44 @@ export default function LoginPage() {
   e.preventDefault();
 
   try {
+
     const response = await login(
       formData.email,
       formData.password
     );
 
+    const { token, user } = response.data;
+
     localStorage.setItem(
       "token",
-      response.data.token
+      token
     );
 
     localStorage.setItem(
       "nama",
-      response.data.user.nama
+      user.nama
     );
 
-    navigate("/dashboard");
-  } catch (err) {
-  console.log(err);
-  console.log(err.response);
-  console.log(err.response?.data);
+    localStorage.setItem(
+      "role",
+      user.role
+    );
 
-  alert(
-    err.response?.data?.message ||
-    err.message ||
-    "Login gagal"
-  );
+    if (user.role === "family") {
+      navigate("/family-dashboard");
+    } else {
+      navigate("/dashboard");
+    }
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert(
+      err.response?.data?.message ||
+      "Login gagal."
+    );
+
   }
 };
 
@@ -81,7 +93,7 @@ export default function LoginPage() {
           />
 
           <div className="flex w-full flex-1 flex-col gap-5">
-   
+
             <div>
               <label
                 htmlFor="email"

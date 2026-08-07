@@ -1,4 +1,8 @@
-import { getDashboardData } from "../services/dashboardService.js";
+import {
+  getDashboardData,
+  getFamilyDashboardData,
+} from "../services/dashboardService.js";
+
 import {
   successResponse,
   errorResponse,
@@ -6,14 +10,52 @@ import {
 
 export const getDashboard = async (req, res) => {
   try {
-    const result = await getDashboardData(req.user.id);
+
+    const result = await getDashboardData(
+      req.user.id
+    );
 
     successResponse(
       res,
       "Dashboard berhasil diambil.",
       result
     );
+
   } catch (err) {
-    errorResponse(res, err.message);
+
+    errorResponse(
+      res,
+      err.message
+    );
+
   }
+};
+
+export const getFamilyDashboardController = async (
+  req,
+  res
+) => {
+
+  try {
+
+    const result =
+      await getFamilyDashboardData(
+        req.user.id
+      );
+
+    successResponse(
+      res,
+      "Dashboard pendamping berhasil diambil.",
+      result
+    );
+
+  } catch (err) {
+
+    errorResponse(
+      res,
+      err.message
+    );
+
+  }
+
 };
