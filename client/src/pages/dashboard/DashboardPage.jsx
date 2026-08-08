@@ -5,7 +5,7 @@ import ScannerContent from "./components/ScannerContent";
 import ChatContent from "./components/ChatContent";
 import SettingsContent from "./components/SettingsContent";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
     Home,
     PlusCircle,
@@ -25,6 +25,10 @@ import {
 
 import { getDashboard } from "../../services/dashboardService";
 import { createLog } from "../../services/logService";
+import {
+    getNotifications,
+    markNotificationAsRead,
+} from "../../services/notificationService";
 
 
 const WhatsAppIcon = ({ className }) => (
@@ -137,6 +141,12 @@ export default function DashboardPage() {
     const [jadwalHariIni, setJadwalHariIni] = useState([]);
 
     const [showScheduleModal, setShowScheduleModal] = useState(false);
+
+    const [notifications, setNotifications] = useState([]);
+const [showNotifications, setShowNotifications] = useState(false);
+
+const knownNotificationIds = useRef(new Set());
+const firstNotificationFetch = useRef(true);
     const [search, setSearch] = useState("");
     const [filterStatus, setFilterStatus] = useState("Semua");
 
@@ -176,6 +186,93 @@ export default function DashboardPage() {
 
         fetchDashboard();
     }, []);
+
+    useEffect(() => {
+    const fetchNotifications = async () => {
+        try {
+            const response = await getNotifications();
+
+            console.log("NOTIFICATION RESPONSE:", response);
+
+            const data = Array.isArray(response)
+                ? response
+                : response?.data || [];
+
+            // Saat pertama kali mengambil data,
+            // jangan munculkan popup untuk notif lama.
+            if (firstNotificationFetch.current) {
+                data.forEach((notification) => {
+                    knownNotificationIds.current.add(notification.id);
+                });
+
+                firstNotificationFetch.current = false;
+            } else {
+                // Cari notifikasi baru
+                const newNotifications = data.filter(
+                    (notification) =>
+                        !knownNotificationIds.current.has(notification.id)
+                );
+
+                // Tampilkan desktop notification
+                newNotifications.forEach((notification) => {
+                    if (
+                        "Notification" in window &&
+                        Notification.permission === "granted"
+                    ) {
+                        new Notification("TBCare", {
+                            body: notification.message,
+                            icon: "/favicon.ico",
+                        });
+                    }
+
+                    knownNotificationIds.current.add(notification.id);
+                });
+            }
+
+            setNotifications(data);
+        } catch (error) {
+            console.error("Notification Error:", error);
+        }
+    };
+
+    // Minta izin notification browser
+    if ("Notification" in window) {
+        if (Notification.permission === "default") {
+            Notification.requestPermission().then((permission) => {
+                console.log("Notification permission:", permission);
+            });
+        }
+    }
+
+    // Ambil notif pertama kali
+    fetchNotifications();
+
+    // Cek notif baru setiap 5 detik
+    const interval = setInterval(() => {
+        fetchNotifications();
+    }, 5000);
+
+    return () => clearInterval(interval);
+}, []);
+
+    const handleMarkAsRead = async (notificationId) => {
+        try {
+            await markNotificationAsRead(notificationId);
+
+            setNotifications((prev) =>
+                prev.map((notification) =>
+                    notification.id === notificationId
+                        ? { ...notification, is_read: 1 }
+                        : notification
+                )
+            );
+        } catch (error) {
+            console.error(
+                "Gagal menandai notifikasi:",
+                error
+            );
+        }
+    };
 
     const handleMinumObat = async (id) => {
         const target = jadwalHariIni.find(
@@ -282,9 +379,92 @@ export default function DashboardPage() {
                         <p className="text-gray-500 text-sm mt-1">{currentHeader.subtitle}</p>
                     </div>
                     <div className="flex items-center gap-5">
-                        <button className="w-11 h-11 rounded-full bg-white shadow-sm flex items-center justify-center hover:shadow-md transition-shadow">
-                            <BellPlus className="w-5 h-5 text-gray-800" strokeWidth={2} />
-                        </button>
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowNotifications((prev) => !prev)}
+                                className="relative w-11 h-11 rounded-full bg-white shadow-sm flex items-center justify-center hover:shadow-md transition-shadow"
+                            >
+                                <BellPlus
+                                    className="w-5 h-5 text-gray-800"
+                                    strokeWidth={2}
+                                />
+
+                                {notifications.filter(
+                                    (notification) => Number(notification.is_read) === 0
+                                ).length > 0 && (
+                                        <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
+                                            {
+                                                notifications.filter(
+                                                    (notification) =>
+                                                        Number(notification.is_read) === 0
+                                                ).length
+                                            }
+                                        </span>
+                                    )}
+                            </button>
+
+                            {showNotifications && (
+                                <div className="absolute right-0 top-14 z-50 w-80 rounded-2xl bg-white shadow-xl border border-gray-200 overflow-hidden">
+                                    <div className="px-5 py-4 border-b">
+                                        <h3 className="font-bold text-gray-900">
+                                            Notifikasi
+                                        </h3>
+                                    </div>
+
+                                    <div className="max-h-80 overflow-y-auto">
+                                        {notifications.length === 0 ? (
+                                            <p className="px-5 py-6 text-sm text-gray-500">
+                                                Belum ada notifikasi.
+                                            </p>
+                                        ) : (
+                                            notifications.map((notification) => (
+                                                <div
+                                                    key={notification.id}
+                                                    className={`px-5 py-4 border-b border-gray-100 ${Number(notification.is_read) === 0
+                                                            ? "bg-blue-50"
+                                                            : "bg-white"
+                                                        }`}
+                                                >
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="flex-1">
+                                                            <p
+                                                                className={`text-sm ${Number(notification.is_read) === 0
+                                                                        ? "font-semibold text-gray-900"
+                                                                        : "text-gray-600"
+                                                                    }`}
+                                                            >
+                                                                {notification.message}
+                                                            </p>
+
+                                                            <p className="mt-1 text-xs text-gray-400">
+                                                                {notification.created_at
+                                                                    ? new Date(
+                                                                        notification.created_at
+                                                                    ).toLocaleString("id-ID")
+                                                                    : ""}
+                                                            </p>
+                                                        </div>
+
+                                                        {Number(notification.is_read) === 0 && (
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleMarkAsRead(
+                                                                        notification.id
+                                                                    )
+                                                                }
+                                                                className="shrink-0 text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline"
+                                                            >
+                                                                Tandai sudah dibaca
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                         <div className="flex items-center gap-2.5">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-200 to-slate-300" />
                             <span className="font-semibold text-gray-800 text-sm">

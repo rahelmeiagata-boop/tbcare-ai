@@ -3,6 +3,7 @@ import express from "express";
 import {
   sendReminder,
   getMyNotifications,
+  markAsRead,
 } from "../controllers/notificationController.js";
 
 import {
@@ -21,6 +22,12 @@ router.get(
   "/",
   authenticate,
   getMyNotifications
+);
+
+router.patch(
+  "/:id/read",
+  authenticate,
+  markAsRead
 );
 
 export default router;

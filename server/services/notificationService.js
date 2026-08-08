@@ -4,7 +4,6 @@ export const createNotification = async (
   userId,
   message
 ) => {
-
   await db.execute(
     `
     INSERT INTO notifications
@@ -27,13 +26,11 @@ export const createNotification = async (
       message
     ]
   );
-
 };
 
 export const getNotifications = async (
   userId
 ) => {
-
   const [rows] = await db.execute(
     `
     SELECT
@@ -48,5 +45,24 @@ export const getNotifications = async (
   );
 
   return rows;
+};
 
+export const markNotificationAsRead = async (
+  notificationId,
+  userId
+) => {
+  const [result] = await db.execute(
+    `
+    UPDATE notifications
+    SET is_read = 1
+    WHERE id = ?
+    AND user_id = ?
+    `,
+    [
+      notificationId,
+      userId
+    ]
+  );
+
+  return result;
 };
