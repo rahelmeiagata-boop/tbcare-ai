@@ -18,14 +18,6 @@ dotenv.config();
 
 const app = express();
 
-app.use((req, res, next) => {
-    if (req.query.path) {
-        const apiPath = String(req.query.path).replace(/^\/+/, "");
-        req.url = `/api/${apiPath}`;
-    }
-    next();
-});
-
 app.use(cors());
 
 app.use(express.json({ limit: "10mb" }));
@@ -44,7 +36,10 @@ app.use("/api/notification", notificationRoutes);
 app.use("/api/push", pushRoutes);
 
 app.get("/api/health", (req, res) => {
-    res.json({ success: true, message: "TBCare API is running" });
+    res.json({
+        success: true,
+        message: "TBCare API is running"
+    });
 });
 
 app.get("/", (req, res) => {
