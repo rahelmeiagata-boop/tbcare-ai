@@ -18,9 +18,16 @@ dotenv.config();
 
 const app = express();
 
+app.use((req, res, next) => {
+    if (req.query.path) {
+        const apiPath = String(req.query.path).replace(/^\/+/, "");
+        req.url = `/api/${apiPath}`;
+    }
+    next();
+});
+
 app.use(cors());
 
-// Naikkan limit karena foto profil dikirim dalam bentuk Base64
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
@@ -36,7 +43,7 @@ app.use("/api/family", familyRoutes);
 app.use("/api/notification", notificationRoutes);
 app.use("/api/push", pushRoutes);
 
-app.get("/health", (req, res) => {
+app.get("/api/health", (req, res) => {
     res.json({ success: true, message: "TBCare API is running" });
 });
 
