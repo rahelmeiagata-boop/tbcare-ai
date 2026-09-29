@@ -1,6 +1,17 @@
-import { ChevronRight, Award, Pill, QrCode, FileEdit, Bot, Users,} from "lucide-react";
+import {
+    ChevronRight,
+    Award,
+    Pill,
+    QrCode,
+    FileEdit,
+    Bot,
+    Users,
+    AlertCircle,
+    CheckCircle2,
+} from "lucide-react";
 
 const TOTAL_HARI_PROGRAM = 180;
+
 const QUICK_ACTIONS = [
     {
         label: "Scan Resep AI",
@@ -11,19 +22,19 @@ const QUICK_ACTIONS = [
     {
         label: "Tambah Obat Manual",
         icon: FileEdit,
-        bg: "bg-teal-400",
+        bg: "bg-teal-500",
         tab: "Obat Saya",
     },
     {
-        label: "Chat AI Doctor",
+        label: "AI Treatment Companion",
         icon: Bot,
         bg: "bg-blue-600",
-        tab: "AI Chat Doctor",
+        tab: "AI Treatment Companion",
     },
     {
-        label: "Monitoring keluarga",
+        label: "Monitoring Keluarga",
         icon: Users,
-        bg: "bg-teal-400",
+        bg: "bg-teal-500",
         tab: "Family Monitoring",
     },
 ];
@@ -47,8 +58,14 @@ const CircularProgress = ({ percentage }) => {
     const strokeWidth = 14;
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
+
+    const safePercentage = Math.min(
+        100,
+        Math.max(0, Number(percentage) || 0)
+    );
+
     const offset =
-        circumference - (percentage / 100) * circumference;
+        circumference - (safePercentage / 100) * circumference;
 
     return (
         <div
@@ -75,7 +92,6 @@ const CircularProgress = ({ percentage }) => {
                             offset="0%"
                             stopColor="#0f766e"
                         />
-
                         <stop
                             offset="100%"
                             stopColor="#5eead4"
@@ -107,83 +123,121 @@ const CircularProgress = ({ percentage }) => {
             </svg>
 
             <span className="absolute text-3xl font-extrabold text-gray-900">
-                {percentage}%
+                {safePercentage}%
             </span>
         </div>
     );
 };
 
-const DashboardContent = ({ dailyProgress, therapyProgress, therapyDay, streak, sisaObat, jadwalHariIni, handleMinumObat, setActiveTab, setShowScheduleModal }) => {
+const DashboardContent = ({
+    dailyProgress,
+    therapyProgress,
+    therapyDay,
+    streak,
+    sisaObat,
+    jadwalHariIni,
+    handleMinumObat,
+    setActiveTab,
+    setShowScheduleModal,
+}) => {
+    const jadwal = Array.isArray(jadwalHariIni)
+        ? jadwalHariIni
+        : [];
+
+    const safeDailyProgress = Math.min(
+        100,
+        Math.max(0, Number(dailyProgress) || 0)
+    );
+
+    const safeTherapyProgress = Math.min(
+        100,
+        Math.max(0, Number(therapyProgress) || 0)
+    );
+
     return (
         <>
+            {/* =========================
+                TOP SECTION
+            ========================== */}
             <div className="grid grid-cols-12 gap-6">
-                <div className="col-span-12 lg:col-span-7 bg-white rounded-3xl shadow-sm p-7 flex flex-col">
-                    <h2 className="text-xl font-bold text-gray-900">
-                        Jadwal Hari Ini
-                    </h2>
 
-                    <p className="text-gray-400 text-sm mt-1 mb-5">
-                        {new Date().toLocaleDateString(
-                            "id-ID",
-                            {
-                                weekday: "long",
-                                day: "numeric",
-                                month: "long",
-                                year: "numeric",
-                            }
-                        )}
-                    </p>
+                {/* JADWAL HARI INI */}
+                <div className="col-span-12 lg:col-span-7 bg-white rounded-3xl shadow-sm border border-gray-100 p-7 flex flex-col">
 
-                    <div className="border border-gray-200 rounded-xl overflow-hidden">
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-900">
+                            Jadwal Hari Ini
+                        </h2>
 
-                        {jadwalHariIni
-                            .slice(0, 5)
-                            .map((item, idx) => (
-                                <div
-                                    key={item.id}
-                                    className={`flex items-stretch text-sm ${
-                                        idx !==
-                                        jadwalHariIni.slice(0, 5)
-                                            .length -
-                                            1
-                                            ? "border-b border-gray-200"
-                                            : ""
-                                    }`}
-                                >
-
-                                    <div className="w-20 shrink-0 px-4 py-3.5 border-r border-gray-200 text-gray-700 font-medium flex items-center">
-                                        {item.waktu}
-                                    </div>
-
-                                    <div className="flex-1 px-4 py-3.5 border-r border-gray-200 text-gray-700 font-medium flex items-center">
-                                        {item.namaObat}
-                                    </div>
-
-                                    <div className="w-36 shrink-0 px-4 py-3.5 flex items-center justify-center">
-
-                                        {item.status ===
-                                        "Belum Minum" ? (
-                                            <button
-                                                onClick={() =>
-                                                    handleMinumObat(
-                                                        item.id
-                                                    )
-                                                }
-                                                className="text-red-500 font-semibold hover:text-red-600 hover:underline transition-colors"
-                                            >
-                                                Belum Minum
-                                            </button>
-                                        ) : (
-                                            <span className="text-blue-600 font-semibold">
-                                                Sudah Minum
-                                            </span>
-                                        )}
-
-                                    </div>
-                                </div>
-                            ))}
-
+                        <p className="text-gray-400 text-sm mt-1 mb-5">
+                            {new Date().toLocaleDateString(
+                                "id-ID",
+                                {
+                                    weekday: "long",
+                                    day: "numeric",
+                                    month: "long",
+                                    year: "numeric",
+                                }
+                            )}
+                        </p>
                     </div>
+
+                    {jadwal.length > 0 ? (
+                        <div className="border border-gray-200 rounded-xl overflow-hidden">
+
+                            {jadwal
+                                .slice(0, 5)
+                                .map((item, idx) => (
+                                    <div
+                                        key={item.id ?? idx}
+                                        className={`flex items-stretch text-sm ${idx !==
+                                                jadwal.slice(0, 5).length - 1
+                                                ? "border-b border-gray-200"
+                                                : ""
+                                            }`}
+                                    >
+                                        <div className="w-20 shrink-0 px-4 py-3.5 border-r border-gray-200 text-gray-700 font-medium flex items-center">
+                                            {item.waktu}
+                                        </div>
+
+                                        <div className="flex-1 min-w-0 px-4 py-3.5 border-r border-gray-200 text-gray-700 font-medium flex items-center">
+                                            <span className="truncate">
+                                                {item.namaObat}
+                                            </span>
+                                        </div>
+
+                                        <div className="w-36 shrink-0 px-4 py-3.5 flex items-center justify-center">
+
+                                            {item.status === "Belum Minum" ? (
+                                                <button
+                                                    onClick={() =>
+                                                        handleMinumObat(
+                                                            item.id
+                                                        )
+                                                    }
+                                                    className="text-red-500 font-semibold hover:text-red-600 hover:underline transition-colors"
+                                                >
+                                                    Belum Minum
+                                                </button>
+                                            ) : (
+                                                <span className="text-blue-600 font-semibold flex items-center gap-1">
+                                                    <CheckCircle2 className="w-4 h-4" />
+                                                    Sudah Minum
+                                                </span>
+                                            )}
+
+                                        </div>
+                                    </div>
+                                ))}
+
+                        </div>
+                    ) : (
+                        <div className="border border-dashed border-gray-200 rounded-xl p-8 text-center">
+                            <p className="text-gray-400 text-sm">
+                                Belum ada jadwal obat hari ini.
+                            </p>
+                        </div>
+                    )}
 
                     <div className="flex-1 flex items-end mt-6">
 
@@ -201,7 +255,8 @@ const DashboardContent = ({ dailyProgress, therapyProgress, therapyDay, streak, 
                     </div>
                 </div>
 
-                <div className="col-span-6 lg:col-span-2 bg-white rounded-3xl shadow-sm p-6 flex flex-col">
+                {/* PROGRES TERAPI */}
+                <div className="col-span-6 lg:col-span-2 bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex flex-col">
 
                     <h2 className="text-base font-bold text-gray-900 mb-4">
                         Progres Terapi
@@ -209,7 +264,7 @@ const DashboardContent = ({ dailyProgress, therapyProgress, therapyDay, streak, 
 
                     <div className="flex justify-center">
                         <CircularProgress
-                            percentage={therapyProgress}
+                            percentage={safeTherapyProgress}
                         />
                     </div>
 
@@ -225,23 +280,21 @@ const DashboardContent = ({ dailyProgress, therapyProgress, therapyDay, streak, 
                             </span>
 
                             <span>
-                                {dailyProgress}%
+                                {safeDailyProgress}%
                             </span>
                         </div>
 
                         <div className="w-full h-3 rounded-full bg-gray-200 overflow-hidden">
-
                             <div
                                 className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 transition-all duration-500"
                                 style={{
-                                    width: `${dailyProgress}%`,
+                                    width: `${safeDailyProgress}%`,
                                 }}
                             />
-
                         </div>
 
                         <p className="text-xs text-gray-400 mt-2 text-center">
-                            {dailyProgress === 100
+                            {safeDailyProgress === 100
                                 ? "Semua jadwal hari ini telah diselesaikan 🎉"
                                 : "Selesaikan semua jadwal obat hari ini"}
                         </p>
@@ -249,9 +302,10 @@ const DashboardContent = ({ dailyProgress, therapyProgress, therapyDay, streak, 
                     </div>
                 </div>
 
+                {/* BADGE + SISA OBAT */}
                 <div className="col-span-6 lg:col-span-3 flex flex-col gap-6">
 
-                    <div className="bg-white rounded-3xl shadow-sm p-6 flex flex-col items-center flex-1">
+                    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex flex-col items-center flex-1">
 
                         <h2 className="text-base font-bold text-gray-900 self-start mb-3">
                             Badge Kepatuhan
@@ -263,7 +317,7 @@ const DashboardContent = ({ dailyProgress, therapyProgress, therapyDay, streak, 
                         />
 
                         <p className="text-2xl font-extrabold text-gray-900 mt-3">
-                            {streak}{" "}
+                            {streak || 0}{" "}
                             <span className="text-base font-bold">
                                 Hari
                             </span>
@@ -275,7 +329,7 @@ const DashboardContent = ({ dailyProgress, therapyProgress, therapyDay, streak, 
 
                     </div>
 
-                    <div className="bg-white rounded-3xl shadow-sm p-5">
+                    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5">
 
                         <h2 className="text-sm font-bold text-gray-900 mb-2">
                             Sisa Obat
@@ -284,7 +338,7 @@ const DashboardContent = ({ dailyProgress, therapyProgress, therapyDay, streak, 
                         <div className="flex items-center justify-between">
 
                             <span className="text-lg font-bold text-gray-800">
-                                {sisaObat} Tablet
+                                {sisaObat || 0} Tablet
                             </span>
 
                             <Pill
@@ -294,16 +348,115 @@ const DashboardContent = ({ dailyProgress, therapyProgress, therapyDay, streak, 
 
                         </div>
                     </div>
+
                 </div>
             </div>
 
+
+            {/* =========================
+                AI TREATMENT INSIGHT
+            ========================== */}
+            <div className="mt-6 bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+
+                    <div className="flex items-start gap-4">
+
+                        <div className="w-11 h-11 rounded-2xl bg-amber-50 flex items-center justify-center shrink-0">
+                            <AlertCircle className="w-6 h-6 text-amber-500" />
+                        </div>
+
+                        <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <h2 className="text-lg font-bold text-gray-900">
+                                    AI Treatment Insight
+                                </h2>
+
+                                <span className="text-xs font-medium bg-amber-50 text-amber-600 px-2.5 py-1 rounded-full">
+                                    Perlu diperhatikan
+                                </span>
+                            </div>
+
+                            <p className="text-sm text-gray-500 mt-1">
+                                Insight berdasarkan aktivitas dan perjalanan pengobatan Anda.
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <button
+                        onClick={() =>
+                            setActiveTab("AI Treatment Companion")
+                        }
+                        className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                    >
+                        Buka Treatment Companion →
+                    </button>
+
+                </div>
+
+
+                <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-3">
+
+                    <div className="rounded-2xl bg-gray-50 border border-gray-100 p-4">
+                        <p className="text-xs text-gray-400 mb-1">
+                            Kepatuhan hari ini
+                        </p>
+
+                        <p className="text-xl font-bold text-gray-900">
+                            {safeDailyProgress}%
+                        </p>
+
+                        <p className="text-xs text-gray-500 mt-1">
+                            Berdasarkan jadwal obat hari ini
+                        </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-gray-50 border border-gray-100 p-4">
+                        <p className="text-xs text-gray-400 mb-1">
+                            Catatan perjalanan
+                        </p>
+
+                        <p className="text-xl font-bold text-gray-900">
+                            {streak || 0} hari
+                        </p>
+
+                        <p className="text-xs text-gray-500 mt-1">
+                            Kepatuhan berturut-turut
+                        </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-gray-50 border border-gray-100 p-4">
+                        <p className="text-xs text-gray-400 mb-1">
+                            Tindak lanjut
+                        </p>
+
+                        <p className="text-sm font-semibold text-gray-900">
+                            Pantau perkembangan
+                        </p>
+
+                        <p className="text-xs text-gray-500 mt-1">
+                            Insight AI bukan diagnosis medis
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            {/* =========================
+                QUICK ACTION
+            ========================== */}
             <div className="grid grid-cols-12 gap-6 mt-6">
-                <div className="col-span-12 lg:col-span-8 bg-slate-50 rounded-3xl shadow-sm p-7">
+
+                <div className="col-span-12 lg:col-span-8 bg-slate-50 rounded-3xl shadow-sm border border-gray-100 p-7">
+
                     <h2 className="text-xl font-bold text-gray-900 mb-6">
                         Quick Action
                     </h2>
 
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
 
                         {QUICK_ACTIONS.map((action) => {
                             const Icon = action.icon;
@@ -312,9 +465,7 @@ const DashboardContent = ({ dailyProgress, therapyProgress, therapyDay, streak, 
                                 <button
                                     key={action.label}
                                     onClick={() =>
-                                        setActiveTab(
-                                            action.tab
-                                        )
+                                        setActiveTab(action.tab)
                                     }
                                     className="group flex items-center gap-3.5 text-left"
                                 >
@@ -339,8 +490,12 @@ const DashboardContent = ({ dailyProgress, therapyProgress, therapyDay, streak, 
                     </div>
                 </div>
 
+
+                {/* WHATSAPP */}
                 <div className="col-span-12 lg:col-span-4 flex items-end">
-                    <div className="w-full bg-white rounded-3xl shadow-sm p-6 flex items-start gap-4">
+
+                    <div className="w-full bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex items-start gap-4">
+
                         <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center shrink-0">
                             <WhatsAppIcon className="w-6 h-6 text-white" />
                         </div>
@@ -349,13 +504,16 @@ const DashboardContent = ({ dailyProgress, therapyProgress, therapyDay, streak, 
                             <h3 className="font-bold text-gray-900 mb-1">
                                 Notifikasi Aktif
                             </h3>
+
                             <p className="text-sm text-gray-400 leading-relaxed">
-                                Notifikasi akan dikirim melalui WhatsApp sesuai jadwal anda
+                                Notifikasi akan dikirim melalui WhatsApp sesuai jadwal Anda.
                             </p>
                         </div>
 
                     </div>
+
                 </div>
+
             </div>
         </>
     );

@@ -1,12 +1,14 @@
 import DashboardContent from "./components/DashboardContent";
 import MedicineContent from "./components/MedicineContent";
+import CheckInContent from "./components/CheckInContent";
 import FamilyPage from "../family/FamilyPage";
 import ScannerContent from "./components/ScannerContent";
 import ChatContent from "./components/ChatContent";
 import SettingsContent from "./components/SettingsContent";
+import TreatmentJourney from "./components/TreatmentJourney";
 
 import { useState, useEffect, useRef } from "react";
-import { Home, PlusCircle, Camera, Users, MessageSquare, Settings, BellPlus, HeartPulse } from "lucide-react";
+import { Home, PlusCircle, Camera, Users, MessageSquare, Settings, BellPlus, HeartPulse, ClipboardCheck, TrendingUp } from "lucide-react";
 import { getDashboard } from "../../services/dashboardService";
 import { createLog } from "../../services/logService";
 import { getNotifications, markNotificationAsRead, } from "../../services/notificationService";
@@ -24,6 +26,16 @@ const MENU_ITEMS = [
         icon: PlusCircle,
     },
     {
+        id: "Daily Check-in",
+        label: "Daily Check-in",
+        icon: ClipboardCheck,
+    },
+    {
+        id: "Treatment Journey",
+        label: "Treatment Journey",
+        icon: TrendingUp,
+    },
+    {
         id: "Scanning Resep AI",
         label: "Scanning Resep AI",
         icon: Camera,
@@ -34,8 +46,8 @@ const MENU_ITEMS = [
         icon: Users,
     },
     {
-        id: "AI Chat Doctor",
-        label: "AI Chat Doctor",
+        id: "AI Treatment Companion",
+        label: "AI Treatment Companion",
         icon: MessageSquare,
     },
     {
@@ -71,6 +83,17 @@ const HEADER_CONTENT = {
             "Tetap Semangat! Konsistensi minum obat adalah kunci kesembuhan.",
     },
 
+    "Daily Check-in": {
+        title: "DAILY CHECK-IN",
+        subtitle: "Catat kondisi dan pengalaman Anda selama menjalani pengobatan",
+    },
+
+    "Treatment Journey": {
+        title: "TREATMENT JOURNEY",
+        subtitle:
+            "Lihat perkembangan perjalanan pengobatan Anda dari waktu ke waktu",
+    },
+
     "Obat Saya": {
         title: "OBAT SAYA",
         subtitle:
@@ -89,10 +112,10 @@ const HEADER_CONTENT = {
             "Pantau kepatuhan minum obat anggota keluarga",
     },
 
-    "AI Chat Doctor": {
-        title: "AI CHAT DOCTOR",
+    "AI Treatment Companion": {
+        title: "AI TREATMENT COMPANION",
         subtitle:
-            "Konsultasi seputar terapi bersama asisten AI",
+            "Pendamping AI selama menjalani pengobatan TB",
     },
 
     Pengaturan: {
@@ -119,11 +142,74 @@ export default function DashboardPage() {
     const [jadwalHariIni, setJadwalHariIni] =
         useState([]);
     const getSavedProfile = () => {
-    try {
-        const savedUser =
-            localStorage.getItem("user");
+        try {
+            const savedUser =
+                localStorage.getItem("user");
 
-        if (!savedUser) {
+            if (!savedUser) {
+                return {
+                    nama: "",
+                    email: "",
+                    nomor_hp: "",
+                    foto: "",
+                    role: "",
+                    id: null,
+                };
+            }
+
+            const user = JSON.parse(savedUser);
+
+            if (!user?.id) {
+                return {
+                    nama: user?.nama || "",
+                    email: user?.email || "",
+                    nomor_hp: user?.nomor_hp || "",
+                    foto: "",
+                    role: user?.role || "",
+                    id: null,
+                };
+            }
+
+            const profileKey =
+                `tbcare_profile_${user.id}`;
+
+            const savedProfile =
+                localStorage.getItem(profileKey);
+
+            if (!savedProfile) {
+                return {
+                    nama: user.nama || "",
+                    email: user.email || "",
+                    nomor_hp: user.nomor_hp || "",
+                    foto: "",
+                    role: user.role || "",
+                    id: user.id,
+                };
+            }
+
+            const profileData =
+                JSON.parse(savedProfile);
+
+            return {
+                id: user.id,
+                nama: profileData.nama || user.nama || "",
+                email:
+                    profileData.email ||
+                    user.email ||
+                    "",
+                nomor_hp:
+                    profileData.nomor_hp ||
+                    user.nomor_hp ||
+                    "",
+                foto: profileData.foto || "",
+                role: user.role || "",
+            };
+        } catch (error) {
+            console.error(
+                "Gagal membaca profil:",
+                error
+            );
+
             return {
                 nama: "",
                 email: "",
@@ -133,74 +219,11 @@ export default function DashboardPage() {
                 id: null,
             };
         }
+    };
 
-        const user = JSON.parse(savedUser);
-
-        if (!user?.id) {
-            return {
-                nama: user?.nama || "",
-                email: user?.email || "",
-                nomor_hp: user?.nomor_hp || "",
-                foto: "",
-                role: user?.role || "",
-                id: null,
-            };
-        }
-
-        const profileKey =
-            `tbcare_profile_${user.id}`;
-
-        const savedProfile =
-            localStorage.getItem(profileKey);
-
-        if (!savedProfile) {
-            return {
-                nama: user.nama || "",
-                email: user.email || "",
-                nomor_hp: user.nomor_hp || "",
-                foto: "",
-                role: user.role || "",
-                id: user.id,
-            };
-        }
-
-        const profileData =
-            JSON.parse(savedProfile);
-
-        return {
-            id: user.id,
-            nama: profileData.nama || user.nama || "",
-            email:
-                profileData.email ||
-                user.email ||
-                "",
-            nomor_hp:
-                profileData.nomor_hp ||
-                user.nomor_hp ||
-                "",
-            foto: profileData.foto || "",
-            role: user.role || "",
-        };
-    } catch (error) {
-        console.error(
-            "Gagal membaca profil:",
-            error
-        );
-
-        return {
-            nama: "",
-            email: "",
-            nomor_hp: "",
-            foto: "",
-            role: "",
-            id: null,
-        };
-    }
-};
-
-const [profile, setProfile] = useState(
-    getSavedProfile
-);
+    const [profile, setProfile] = useState(
+        getSavedProfile
+    );
     const [showScheduleModal, setShowScheduleModal] =
         useState(false);
     const [notifications, setNotifications] =
@@ -287,34 +310,34 @@ const [profile, setProfile] = useState(
     }, []);
 
     useEffect(() => {
-    const loadProfile = () => {
-        setProfile(getSavedProfile());
-    };
+        const loadProfile = () => {
+            setProfile(getSavedProfile());
+        };
 
-    loadProfile();
+        loadProfile();
 
-    window.addEventListener(
-        "storage",
-        loadProfile
-    );
-
-    window.addEventListener(
-        "profileUpdated",
-        loadProfile
-    );
-
-    return () => {
-        window.removeEventListener(
+        window.addEventListener(
             "storage",
             loadProfile
         );
 
-        window.removeEventListener(
+        window.addEventListener(
             "profileUpdated",
             loadProfile
         );
-    };
-}, []);
+
+        return () => {
+            window.removeEventListener(
+                "storage",
+                loadProfile
+            );
+
+            window.removeEventListener(
+                "profileUpdated",
+                loadProfile
+            );
+        };
+    }, []);
 
     const fetchDashboard = async () => {
 
@@ -886,22 +909,31 @@ const [profile, setProfile] = useState(
                         />
 
                     ) : activeTab ===
-                        "Obat Saya" ? (
-                        <MedicineContent />
-                    ) : activeTab ===
-                        "Family Monitoring" ? (
-                        <FamilyPage />
-                    ) : activeTab ===
-                        "Scanning Resep AI" ? (
-                        <ScannerContent />
-                    ) : activeTab ===
-                        "AI Chat Doctor" ? (
-                        <ChatContent />
-                    ) : activeTab ===
-                        "Pengaturan" ? (
-                        <SettingsContent />
-                    ) : null}
-
+    "Obat Saya" ? (
+    <MedicineContent />
+) : activeTab ===
+    "Daily Check-in" ? (
+    <CheckInContent
+        onComplete={() =>
+            setActiveTab("Treatment Journey")
+        }
+    />
+) : activeTab ===
+    "Treatment Journey" ? (
+    <TreatmentJourney />
+) : activeTab ===
+    "Family Monitoring" ? (
+    <FamilyPage />
+) : activeTab ===
+    "Scanning Resep AI" ? (
+    <ScannerContent />
+) : activeTab ===
+    "AI Treatment Companion" ? (
+    <ChatContent />
+) : activeTab ===
+    "Pengaturan" ? (
+    <SettingsContent />
+) : null}
                     {showScheduleModal && (
 
                         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
