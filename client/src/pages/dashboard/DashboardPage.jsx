@@ -10,6 +10,7 @@ import TreatmentJourney from "./components/TreatmentJourney";
 import { useState, useEffect, useRef } from "react";
 import { Home, PlusCircle, Camera, Users, MessageSquare, Settings, BellPlus, HeartPulse, ClipboardCheck, TrendingUp } from "lucide-react";
 import { getDashboard } from "../../services/dashboardService";
+import { getMedications } from "../../services/medicationService";
 import { createLog } from "../../services/logService";
 import { getNotifications, markNotificationAsRead, } from "../../services/notificationService";
 import { enablePushNotification } from "../../services/pushService";
@@ -131,6 +132,8 @@ export default function DashboardPage() {
         useState("Dashboard");
     const [sisaObat, setSisaObat] =
         useState(0);
+    const [daftarObat, setDaftarObat] =
+        useState([]);
     const [dailyProgress, setDailyProgress] =
         useState(0);
     const [therapyProgress, setTherapyProgress] =
@@ -368,6 +371,23 @@ export default function DashboardPage() {
             setSisaObat(
                 data.total_stock || 0
             );
+
+            try {
+                const medicationResponse = await getMedications();
+
+                const medications = Array.isArray(medicationResponse)
+                    ? medicationResponse
+                    : Array.isArray(medicationResponse?.data)
+                        ? medicationResponse.data
+                        : Array.isArray(medicationResponse?.data?.data)
+                            ? medicationResponse.data.data
+                            : [];
+
+                setDaftarObat(medications);
+            } catch (error) {
+                console.error("Gagal mengambil stok obat:", error);
+            }
+
             setJadwalHariIni(
                 (data.today_schedule || [])
                     .map((item) => ({
@@ -879,6 +899,8 @@ export default function DashboardPage() {
                         "Dashboard" ? (
 
                         <DashboardContent
+                            daftarObat={
+                                daftarObat}
                             dailyProgress={
                                 dailyProgress
                             }
@@ -909,31 +931,31 @@ export default function DashboardPage() {
                         />
 
                     ) : activeTab ===
-    "Obat Saya" ? (
-    <MedicineContent />
-) : activeTab ===
-    "Daily Check-in" ? (
-    <CheckInContent
-        onComplete={() =>
-            setActiveTab("Treatment Journey")
-        }
-    />
-) : activeTab ===
-    "Treatment Journey" ? (
-    <TreatmentJourney />
-) : activeTab ===
-    "Family Monitoring" ? (
-    <FamilyPage />
-) : activeTab ===
-    "Scanning Resep AI" ? (
-    <ScannerContent />
-) : activeTab ===
-    "AI Treatment Companion" ? (
-    <ChatContent />
-) : activeTab ===
-    "Pengaturan" ? (
-    <SettingsContent />
-) : null}
+                        "Obat Saya" ? (
+                        <MedicineContent />
+                    ) : activeTab ===
+                        "Daily Check-in" ? (
+                        <CheckInContent
+                            onComplete={() =>
+                                setActiveTab("Treatment Journey")
+                            }
+                        />
+                    ) : activeTab ===
+                        "Treatment Journey" ? (
+                        <TreatmentJourney />
+                    ) : activeTab ===
+                        "Family Monitoring" ? (
+                        <FamilyPage />
+                    ) : activeTab ===
+                        "Scanning Resep AI" ? (
+                        <ScannerContent />
+                    ) : activeTab ===
+                        "AI Treatment Companion" ? (
+                        <ChatContent />
+                    ) : activeTab ===
+                        "Pengaturan" ? (
+                        <SettingsContent />
+                    ) : null}
                     {showScheduleModal && (
 
                         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">

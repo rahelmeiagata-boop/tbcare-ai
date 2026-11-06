@@ -142,6 +142,45 @@ ms.scheduled_time ASC
   );
 
   console.log("TAKEN LOGS :", takenLogs);
+  // Riwayat kepatuhan konsumsi obat 7 hari terakhir
+const [dailyHistory] = await db.execute(
+  `
+  SELECT
+    dates.day,
+    COUNT(DISTINCT ms.id) AS total_schedule,
+    COUNT(DISTINCT CASE
+      WHEN ml.status = 'taken' THEN ms.id
+    END) AS total_taken
+  FROM (
+    SELECT CURDATE() AS day
+    UNION ALL SELECT DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+    UNION ALL SELECT DATE_SUB(CURDATE(), INTERVAL 2 DAY)
+    UNION ALL SELECT DATE_SUB(CURDATE(), INTERVAL 3 DAY)
+    UNION ALL SELECT DATE_SUB(CURDATE(), INTERVAL 4 DAY)
+    UNION ALL SELECT DATE_SUB(CURDATE(), INTERVAL 5 DAY)
+    UNION ALL SELECT DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+  ) AS dates
+  LEFT JOIN medications m
+    ON m.user_id = ?
+    AND dates.day >= m.start_date
+    AND dates.day <= DATE_ADD(
+      m.start_date,
+      INTERVAL m.duration_days - 1 DAY
+    )
+  LEFT JOIN medication_schedules ms
+    ON ms.medication_id = m.id
+  LEFT JOIN medication_logs ml
+    ON ml.schedule_id = ms.id
+    AND DATE(ml.taken_at) = dates.day
+  GROUP BY dates.day
+  ORDER BY dates.day ASC
+  `,
+  [userId]
+);
+
+console.log("DAILY HISTORY :", dailyHistory);
+
+  console.log("DAILY HISTORY :", dailyHistory);
 
   // Semua hari pengguna berhasil minum obat
   const [streakRows] = await db.execute(
@@ -189,27 +228,27 @@ ms.scheduled_time ASC
   const totalTodaySchedule = todaySchedule.length;
 
   const dailyProgress =
-  totalTodaySchedule === 0
-    ? 0
-    : Math.round(
+    totalTodaySchedule === 0
+      ? 0
+      : Math.round(
         (totalTaken / totalTodaySchedule) * 100
       );
 
-const therapyProgress = Math.round(
-  (therapyDay / 180) * 100
-);
+  const therapyProgress = Math.round(
+    (therapyDay / 180) * 100
+  );
   return {
-  today_schedule: todaySchedule,
-  total_stock: totalStock,
-  total_taken: totalTaken,
-  total_schedule: totalTodaySchedule,
+    today_schedule: todaySchedule,
+    total_stock: totalStock,
+    total_taken: totalTaken,
+    total_schedule: totalTodaySchedule,
+    daily_history: dailyHistory,
+    daily_progress: dailyProgress,
+    therapy_progress: therapyProgress,
 
-  daily_progress: dailyProgress,
-  therapy_progress: therapyProgress,
-
-  streak,
-  therapy_day: therapyDay,
-};
+    streak,
+    therapy_day: therapyDay,
+  };
 };
 
 export const getFamilyDashboardData = async (familyId) => {

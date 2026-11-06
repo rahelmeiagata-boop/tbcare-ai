@@ -1,8 +1,33 @@
 import toast from "react-hot-toast";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Pill, Pencil, Trash2, X, Save, Clock3, Package } from "lucide-react";
-import { getMedications, createMedication, updateMedication, deleteMedication } from "../../../services/medicationService";
+import {
+    Plus,
+    Pill,
+    Pencil,
+    Trash2,
+    X,
+    Save,
+    Clock3,
+    Package,
+} from "lucide-react";
+
+import {
+    getMedications,
+    createMedication,
+    updateMedication,
+    deleteMedication,
+} from "../../../services/medicationService";
+
+const TB_MEDICINE_OPTIONS = [
+    "Rifampisin",
+    "Isoniazid",
+    "Pirazinamid",
+    "Etambutol",
+    "Streptomisin",
+    "KDT RH",
+    "KDT RHZE",
+];
 
 const RULE_OPTIONS = [
     {
@@ -55,6 +80,7 @@ const MedicineContent = () => {
     const [editingId, setEditingId] = useState(null);
 
     const [formData, setFormData] = useState(INITIAL_FORM);
+
     const fetchMedications = async () => {
         try {
             setLoading(true);
@@ -245,7 +271,6 @@ const MedicineContent = () => {
         <div className="w-full font-['Poppins']">
             <div className="w-full max-w-[1280px] mx-auto px-6 lg:px-8 pb-10">
                 <div className="flex items-center justify-between mb-6">
-
                     <div>
                         <h2 className="text-2xl font-bold text-[#101828]">
                             Daftar Obat
@@ -378,7 +403,6 @@ const MedicineContent = () => {
                         >
                             <div className="overflow-x-auto">
                                 <table className="w-full">
-
                                     <thead>
                                         <tr className="bg-slate-50 border-b border-slate-100">
                                             <th className="text-left px-6 py-4 text-xs font-bold uppercase tracking-wide text-slate-500">
@@ -462,7 +486,6 @@ const MedicineContent = () => {
 
                                                 <td className="px-6 py-5">
                                                     <div className="flex justify-end gap-2">
-
                                                         <button
                                                             type="button"
                                                             onClick={() =>
@@ -488,9 +511,7 @@ const MedicineContent = () => {
                                                         <button
                                                             type="button"
                                                             onClick={() =>
-                                                                handleDelete(
-                                                                    item.id
-                                                                )
+                                                                handleDelete(item.id)
                                                             }
                                                             className="
                                                                 w-10
@@ -508,7 +529,6 @@ const MedicineContent = () => {
                                                         >
                                                             <Trash2 size={17} />
                                                         </button>
-
                                                     </div>
                                                 </td>
                                             </tr>
@@ -532,7 +552,6 @@ const MedicineContent = () => {
                                     "
                                 >
                                     <div className="flex items-start justify-between gap-4">
-
                                         <div className="flex items-start gap-3 min-w-0">
                                             <div className="w-11 h-11 rounded-xl bg-cyan-50 flex items-center justify-center shrink-0">
                                                 <Pill
@@ -576,7 +595,6 @@ const MedicineContent = () => {
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-3 mt-5">
-
                                         <div className="rounded-xl bg-slate-50 p-3">
                                             <p className="text-xs text-slate-400">
                                                 Frekuensi
@@ -616,7 +634,6 @@ const MedicineContent = () => {
                                                 {item.consumption_schedule?.length || 0} waktu
                                             </p>
                                         </div>
-
                                     </div>
                                 </div>
                             ))}
@@ -684,12 +701,9 @@ const MedicineContent = () => {
                         "
                     >
                         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-6 py-5 flex items-center justify-between">
-
                             <div>
                                 <h2 className="text-xl font-bold text-[#172B4D]">
-                                    {editingId
-                                        ? "Edit Obat"
-                                        : "Tambah Obat"}
+                                    {editingId ? "Edit Obat" : "Tambah Obat"}
                                 </h2>
 
                                 <p className="mt-1 text-sm text-slate-500">
@@ -729,6 +743,7 @@ const MedicineContent = () => {
 
                                     <input
                                         type="text"
+                                        list="tb-medicine-options"
                                         value={formData.med_name}
                                         onChange={(e) =>
                                             handleChange(
@@ -736,7 +751,8 @@ const MedicineContent = () => {
                                                 e.target.value
                                             )
                                         }
-                                        placeholder="Masukkan nama obat"
+                                        placeholder="Pilih atau ketik nama obat sesuai resep"
+                                        autoComplete="off"
                                         className="
                                             w-full
                                             h-12
@@ -753,7 +769,21 @@ const MedicineContent = () => {
                                             transition-all
                                         "
                                     />
+
+                                    <datalist id="tb-medicine-options">
+                                        {TB_MEDICINE_OPTIONS.map((medicine) => (
+                                            <option
+                                                key={medicine}
+                                                value={medicine}
+                                            />
+                                        ))}
+                                    </datalist>
+
+                                    <p className="mt-2 text-xs text-slate-500">
+                                        Pilih nama obat dari daftar atau ketik sesuai resep dokter.
+                                    </p>
                                 </div>
+
                                 <div>
                                     <label className="block mb-2 text-sm font-semibold text-slate-700">
                                         Dosis Obat
@@ -786,6 +816,7 @@ const MedicineContent = () => {
                                         "
                                     />
                                 </div>
+
                                 <div>
                                     <label className="block mb-2 text-sm font-semibold text-slate-700">
                                         Frekuensi Obat
@@ -841,8 +872,8 @@ const MedicineContent = () => {
                                         </option>
                                     </select>
                                 </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block mb-2 text-sm font-semibold text-slate-700">
                                             Durasi
@@ -851,9 +882,7 @@ const MedicineContent = () => {
                                         <input
                                             type="number"
                                             min="1"
-                                            value={
-                                                formData.duration_days
-                                            }
+                                            value={formData.duration_days}
                                             onChange={(e) =>
                                                 handleChange(
                                                     "duration_days",
@@ -910,39 +939,31 @@ const MedicineContent = () => {
                                             "
                                         />
                                     </div>
-
                                 </div>
+
                                 <div className="rounded-xl border border-slate-200 p-4">
-
                                     <div className="flex items-center justify-between mb-4">
-
                                         <div>
                                             <p className="font-semibold text-slate-700">
                                                 Waktu Minum Obat
                                             </p>
 
                                             <p className="text-xs text-slate-400 mt-1">
-                                                Pilih sesuai frekuensi
-                                                obat.
+                                                Pilih sesuai frekuensi obat.
                                             </p>
                                         </div>
 
                                         {formData.frequency && (
                                             <span className="text-xs font-semibold text-teal-600 bg-teal-50 px-3 py-1.5 rounded-full">
                                                 {
-                                                    formData
-                                                        .consumption_schedule
-                                                        .length
+                                                    formData.consumption_schedule.length
                                                 }{" "}
-                                                /{" "}
-                                                {formData.frequency}
+                                                / {formData.frequency}
                                             </span>
                                         )}
-
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-
                                         {RULE_OPTIONS.map((rule) => {
                                             const checked =
                                                 formData.consumption_schedule.includes(
@@ -951,12 +972,8 @@ const MedicineContent = () => {
 
                                             const maxSelected =
                                                 formData.frequency &&
-                                                formData
-                                                    .consumption_schedule
-                                                    .length >=
-                                                    Number(
-                                                        formData.frequency
-                                                    );
+                                                formData.consumption_schedule.length >=
+                                                    Number(formData.frequency);
 
                                             return (
                                                 <label
@@ -998,13 +1015,11 @@ const MedicineContent = () => {
                                                 </label>
                                             );
                                         })}
-
                                     </div>
                                 </div>
-
                             </div>
-                            <div className="mt-7 pt-5 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:justify-between gap-3">
 
+                            <div className="mt-7 pt-5 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:justify-between gap-3">
                                 <button
                                     type="button"
                                     onClick={closeModal}
@@ -1058,7 +1073,6 @@ const MedicineContent = () => {
                                         ? "Update Obat"
                                         : "Simpan Obat"}
                                 </button>
-
                             </div>
                         </form>
                     </div>

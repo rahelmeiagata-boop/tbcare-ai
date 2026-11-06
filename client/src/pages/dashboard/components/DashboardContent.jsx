@@ -135,6 +135,7 @@ const DashboardContent = ({
     therapyDay,
     streak,
     sisaObat,
+    daftarObat,
     jadwalHariIni,
     handleMinumObat,
     setActiveTab,
@@ -159,10 +160,10 @@ const DashboardContent = ({
             {/* =========================
                 TOP SECTION
             ========================== */}
-            <div className="grid grid-cols-12 gap-6">
+            <div className="grid grid-cols-12 gap-6 items-start">
 
                 {/* JADWAL HARI INI */}
-                <div className="col-span-12 lg:col-span-7 bg-white rounded-3xl shadow-sm border border-gray-100 p-7 flex flex-col">
+                <div className="col-span-12 lg:col-span-7 bg-white rounded-3xl shadow-sm border border-gray-100 p-7 flex flex-col self-start">
 
                     <div>
                         <h2 className="text-xl font-bold text-gray-900">
@@ -191,9 +192,9 @@ const DashboardContent = ({
                                     <div
                                         key={item.id ?? idx}
                                         className={`flex items-stretch text-sm ${idx !==
-                                                jadwal.slice(0, 5).length - 1
-                                                ? "border-b border-gray-200"
-                                                : ""
+                                            jadwal.slice(0, 5).length - 1
+                                            ? "border-b border-gray-200"
+                                            : ""
                                             }`}
                                     >
                                         <div className="w-20 shrink-0 px-4 py-3.5 border-r border-gray-200 text-gray-700 font-medium flex items-center">
@@ -239,7 +240,7 @@ const DashboardContent = ({
                         </div>
                     )}
 
-                    <div className="flex-1 flex items-end mt-6">
+                    <div className="mt-6">
 
                         <button
                             onClick={() =>
@@ -331,22 +332,85 @@ const DashboardContent = ({
 
                     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5">
 
-                        <h2 className="text-sm font-bold text-gray-900 mb-2">
-                            Sisa Obat
-                        </h2>
+                        <div className="flex items-center justify-between mb-3">
+                            <div>
+                                <h2 className="text-sm font-bold text-gray-900">
+                                    Sisa Obat
+                                </h2>
+                                <p className="text-xs text-gray-400 mt-1">
+                                    Stok obat yang tersedia
+                                </p>
+                            </div>
 
-                        <div className="flex items-center justify-between">
+                            <Pill className="w-8 h-8 text-cyan-500" />
+                        </div>
 
-                            <span className="text-lg font-bold text-gray-800">
-                                {sisaObat || 0} Tablet
+                        <p className="text-2xl font-extrabold text-gray-900 mb-3">
+                            {daftarObat.reduce(
+                                (total, obat) => total + (Number(obat.stock) || 0),
+                                0
+                            )}{" "}
+                            <span className="text-sm font-medium text-gray-400">
+                                Tablet
                             </span>
+                        </p>
 
-                            <Pill
-                                className="w-9 h-9 text-cyan-400 rotate-45"
-                                strokeWidth={1.5}
-                            />
+                        <div className="space-y-3 max-h-48 overflow-y-auto">
+
+                            {daftarObat.length > 0 ? (
+                                daftarObat.map((obat) => {
+                                    const stock = Number(obat.stock) || 0;
+
+                                    return (
+                                        <div
+                                            key={obat.id}
+                                            className="flex items-center justify-between gap-3 border-t border-gray-100 pt-3"
+                                        >
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-semibold text-gray-800 truncate">
+                                                    {obat.med_name}
+                                                </p>
+                                                <p className="text-xs text-gray-400">
+                                                    {obat.dosage}
+                                                </p>
+                                            </div>
+
+                                            <div className="text-right shrink-0">
+                                                <p className="text-sm font-bold text-gray-800">
+                                                    {stock} Tablet
+                                                </p>
+
+                                                <span className={`text-xs font-medium ${stock <= 0
+                                                        ? "text-red-500"
+                                                        : stock <= 10
+                                                            ? "text-amber-500"
+                                                            : "text-green-600"
+                                                    }`}>
+                                                    {stock <= 0
+                                                        ? "Stok habis"
+                                                        : stock <= 10
+                                                            ? "Stok menipis"
+                                                            : "Tersedia"}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <p className="text-sm text-gray-400 text-center py-3">
+                                    Belum ada obat yang ditambahkan.
+                                </p>
+                            )}
 
                         </div>
+
+                        <button
+                            onClick={() => setActiveTab("Obat Saya")}
+                            className="w-full mt-4 pt-3 border-t border-gray-100 text-sm font-semibold text-blue-600 hover:text-blue-700"
+                        >
+                            Kelola Daftar Obat →
+                        </button>
+
                     </div>
 
                 </div>

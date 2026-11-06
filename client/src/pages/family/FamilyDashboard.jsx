@@ -1,737 +1,661 @@
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
-import { BellPlus, Phone } from "lucide-react";
-import { getFamilyDashboard } from "../../services/familyService";
-import { sendReminder } from "../../services/notificationService";
-
+import {
+  Bell,
+  CalendarDays,
+  ChartNoAxesColumnIncreasing,
+  CheckCircle2,
+  Flame,
+  Info,
+  Package,
+  Pill,
+  TrendingUp,
+} from "lucide-react";
+import { toast } from "react-toastify";
+import {
+  getFamilyDashboard,
+  sendReminder,
+} from "../../services/familyService";
 
 const TOTAL_THERAPY_DAYS = 180;
+function IconBox({ children, color = "mint" }) {
+  const colors = {
+    mint: "bg-[#E7F8F4] text-[#008F83]",
+    amber: "bg-[#FFF5DF] text-[#D97706]",
+    rose: "bg-[#FFE9EA] text-[#E04455]",
+    green: "bg-[#E7F8ED] text-[#178653]",
+  };
 
-const CHART_LABELS = [
-  "18 Juni",
-  "19 Juni",
-  "20 Juni",
-  "21 Juni",
-  "22 Juni",
-  "23 Juni",
-  "24 Juni",
-];
-
-const INITIAL_CHART_DATA = [
-  2,
-  22,
-  22,
-  35,
-  35,
-  50,
-  50,
-];
-
-const TARGET_LINE_DATA = [
-  5,
-  35,
-  35,
-  55,
-  55,
-  75,
-  90,
-];
-
-const DEMO_PATIENT = {
-  id: 1,
-  nama: "Ayah",
-  email: "ayah@gmail.com",
-  nomor_hp: "081234567890",
-};
-
-const DEMO_DASHBOARD = {
-  therapy_day: 153,
-  therapy_progress: 85,
-  daily_progress: 85,
-  streak: 153,
-  total_stock: 14,
-
-  today_schedule: [
-    {
-      id: 1,
-      scheduled_time: "08:00",
-      med_name: "Rifampisin 600 Mg",
-      status: "taken",
-    },
-    {
-      id: 2,
-      scheduled_time: "08:00",
-      med_name: "Pirazinamid 500 Mg",
-      status: "pending",
-    },
-  ],
-};
-
-function DashboardHeader({
-  isNotifOpen,
-  onToggleNotif,
-}) {
   return (
-    <header className="flex h-[100px] items-center justify-between bg-white px-8 lg:px-10">
-      <div>
-        <h1 className="text-[30px] font-extrabold uppercase leading-none tracking-tight text-slate-950">
-          Selamat Datang, Pendamping!
-        </h1>
-
-        <p className="mt-2 text-[14px] text-slate-600">
-          Dapatkan informasi terbaru dari pasien!
-        </p>
-      </div>
-
-      <div className="flex items-center gap-5">
-        <div className="relative">
-          <button
-            type="button"
-            onClick={onToggleNotif}
-            aria-label="Notifikasi"
-            className="relative flex h-11 w-11 items-center justify-center rounded-full text-slate-950 transition hover:bg-slate-100"
-          >
-            <BellPlus
-              size={28}
-              strokeWidth={2}
-            />
-
-            <span className="absolute right-[3px] top-[3px] h-2.5 w-2.5 rounded-full bg-red-500" />
-          </button>
-
-          {isNotifOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={onToggleNotif}
-              />
-
-              <div className="absolute right-0 top-14 z-50 w-[280px] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
-                <p className="text-sm font-bold text-slate-900">
-                  Notifikasi
-                </p>
-
-                <p className="mt-2 text-sm text-slate-500">
-                  Belum ada notifikasi baru.
-                </p>
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-200">
-            <span className="text-sm font-semibold text-slate-500">
-              RM
-            </span>
-          </div>
-
-          <span className="text-[14px] font-semibold text-slate-800">
-            Username
-          </span>
-        </div>
-      </div>
-    </header>
+    <div
+      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${colors[color]}`}
+    >
+      {children}
+    </div>
   );
 }
 
-function ScheduleCard({
-  dashboard,
-  onSendReminder,
-}) {
-  const formattedDate =
-    new Date().toLocaleDateString(
-      "id-ID",
-      {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }
-    );
+function SectionTitle({ icon, title, subtitle }) {
+  return (
+    <div className="mb-5 flex items-center gap-3">
+      <IconBox>{icon}</IconBox>
+      <div className="min-w-0">
+        <h2 className="font-bold text-[#14233F]">{title}</h2>
+        {subtitle && (
+          <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Card({ children, className = "" }) {
+  return (
+    <section
+      className={`min-w-0 rounded-3xl border border-[#E6EFEE] bg-white p-5 shadow-[0_5px_20px_rgba(25,70,75,0.045)] sm:p-6 ${className}`}
+    >
+      {children}
+    </section>
+  );
+}
+
+function TherapyProgressCard({ dashboard }) {
+  const progress = Math.max(
+    0,
+    Math.min(100, Number(dashboard?.therapy_progress ?? 0))
+  );
+
+  const completed = Math.max(
+    0,
+    Number(dashboard?.therapy_day ?? 0)
+  );
+
+  const remaining = Math.max(0, TOTAL_THERAPY_DAYS - completed);
+  const circumference = 2 * Math.PI * 54;
+  const offset = circumference - (progress / 100) * circumference;
 
   return (
-    <div className="flex h-[385px] w-full flex-col rounded-[24px] bg-white p-6 shadow-[0_4px_12px_rgba(15,23,42,0.15)]">
-      <div>
-        <h2 className="text-[22px] font-bold leading-tight text-slate-950">
-          Jadwal Konsumsi Pasien Hari Ini
-        </h2>
+    <Card className="flex flex-col">
+      <SectionTitle
+        icon={<ChartNoAxesColumnIncreasing size={22} />}
+        title="Progres Terapi Pasien"
+        subtitle="Perjalanan pengobatan pasien"
+      />
 
-        <p className="mt-1 text-[14px] text-slate-500">
-          {formattedDate}
+      <div className="flex flex-1 flex-col items-center justify-center py-4">
+        <div className="relative h-44 w-44">
+          <svg viewBox="0 0 140 140" className="h-full w-full -rotate-90">
+            <circle
+              cx="70"
+              cy="70"
+              r="54"
+              stroke="#E5EBF2"
+              strokeWidth="10"
+              fill="none"
+            />
+            <circle
+              cx="70"
+              cy="70"
+              r="54"
+              stroke="#0D9B8E"
+              strokeWidth="10"
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={offset}
+              fill="none"
+              className="transition-all duration-700"
+            />
+          </svg>
+
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-3xl font-extrabold text-[#14233F]">
+              {progress}%
+            </span>
+            <span className="mt-1 text-xs text-slate-500">progres</span>
+          </div>
+        </div>
+
+        <p className="mt-3 text-xl font-bold text-[#14233F]">
+          {completed}/{TOTAL_THERAPY_DAYS} Hari
+        </p>
+        <p className="mt-2 text-center text-sm leading-6 text-slate-500">
+          Progres pengobatan berdasarkan data yang tersedia.
         </p>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-slate-300">
-        <table className="w-full border-collapse text-[14px]">
-          <thead>
-            <tr>
-              <th className="w-[135px] border-b border-r border-slate-300 px-3 py-2.5 text-center font-medium text-slate-700">
-                Waktu
-              </th>
+      <div className="mt-3 flex items-center gap-3 rounded-2xl bg-[#EDF9F6] p-4">
+        <IconBox>
+          <CalendarDays size={21} />
+        </IconBox>
+        <div>
+          <p className="text-sm font-bold text-[#176D65]">
+            {remaining} hari tersisa
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            dari total {TOTAL_THERAPY_DAYS} hari terapi.
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
 
-              <th className="border-b border-r border-slate-300 px-3 py-2.5 text-left font-medium text-slate-700">
-                Nama Obat
-              </th>
+function MedicationScheduleCard({
+  schedule,
+  onReminder,
+  onViewAll,
+}) {
+  return (
+    <Card>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <SectionTitle
+          icon={<CalendarDays size={22} />}
+          title="Jadwal Konsumsi Obat"
+          subtitle="Pantau jadwal obat pasien"
+        />
 
-              <th className="w-[145px] border-b border-slate-300 px-3 py-2.5 text-center font-medium text-slate-700">
-                Status
-              </th>
-            </tr>
-          </thead>
+        <span className="rounded-full bg-[#EDF9F6] px-3 py-1.5 text-xs font-semibold text-[#008F83]">
+          {schedule.length} jadwal
+        </span>
+      </div>
+      {schedule.length > 0 ? (
+        <div className="overflow-hidden rounded-2xl border border-[#E8EFEE]">
+          <div className="grid grid-cols-[68px_minmax(0,1fr)_auto] gap-2 bg-[#F4F8FA] px-3 py-3 text-[11px] font-bold uppercase tracking-wide text-slate-500 sm:grid-cols-[85px_minmax(0,1fr)_auto] sm:px-4">
+            <span>Waktu</span>
+            <span>Nama obat</span>
+            <span>Aksi</span>
+          </div>
 
-          <tbody>
-            {dashboard?.today_schedule
-              ?.slice(0, 4)
-              .map((item) => {
-                const isTaken =
-                  item.status === "taken";
+          <div className="divide-y divide-[#EDF1F5]">
+            {schedule.slice(0, 5).map((item, index) => (
+              <div
+                key={`${item.name}-${item.time}-${index}`}
+                className="grid grid-cols-[68px_minmax(0,1fr)_auto] items-center gap-2 px-3 py-3.5 sm:grid-cols-[85px_minmax(0,1fr)_auto] sm:px-4"
+              >
+                <span className="text-xs font-medium text-slate-600 sm:text-sm">
+                  {item.time}
+                </span>
 
-                return (
-                  <tr
-                    key={item.id}
-                    className="bg-white"
+                <span className="truncate text-sm font-semibold capitalize text-[#24334D]">
+                  {item.name}
+                </span>
+                {item.status === "taken" ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-[#E7F8ED] px-2.5 py-2 text-xs font-bold text-[#178653] sm:px-3">
+                    <CheckCircle2 size={14} />
+                    <span>Sudah Diminum</span>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => onReminder(item)}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#FFE9EA] px-2.5 py-2 text-xs font-bold text-[#D83F50] transition hover:bg-[#FFD9DC] sm:px-3"
                   >
-                    <td className="border-b border-r border-slate-300 px-3 py-2.5 text-center text-slate-800">
-                      {item.scheduled_time}
-                    </td>
+                    <Bell size={14} />
+                    <span>Ingatkan</span>
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          {schedule.length > 5 && (
+            <button
+              type="button"
+              onClick={onViewAll}
+              className="mt-3 w-full rounded-xl border border-[#DDEFEA] py-3 text-sm font-bold text-[#008F83] transition hover:bg-[#EDF9F6]"
+            >
+              Lihat Jadwal Selengkapnya
+            </button>
+          )}
+        </div>
 
-                    <td className="border-b border-r border-slate-300 px-3 py-2.5 text-slate-800">
-                      {item.med_name}
-                    </td>
+      ) : (
+        <div className="rounded-2xl bg-slate-50 px-4 py-10 text-center">
+          <Pill className="mx-auto mb-3 text-slate-400" size={30} />
+          <p className="font-semibold text-slate-700">
+            Belum ada jadwal obat
+          </p>
+          <p className="mt-1 text-sm text-slate-500">
+            Jadwal akan muncul ketika data tersedia.
+          </p>
+        </div>
+      )}
+      <div className="mt-4 flex items-start gap-2 text-xs leading-5 text-slate-500">
+        <Info size={16} className="mt-0.5 shrink-0" />
+        <p>
+          Bantu pasien mengikuti jadwal pengobatan sesuai arahan tenaga
+          kesehatan.
+        </p>
+      </div>
+    </Card>
+  );
+}
+function SummaryCard({ icon, title, value, unit, description, color }) {
+  return (
+    <Card className="h-full">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-medium leading-5 text-slate-500">
+            {title}
+          </p>
+          <div className="mt-3 flex flex-wrap items-baseline gap-2">
+            <span className="text-4xl font-extrabold tracking-tight text-[#14233F]">
+              {value}
+            </span>
+            {unit && (
+              <span className="text-sm text-slate-500">{unit}</span>
+            )}
+          </div>
+        </div>
+        <IconBox color={color}>{icon}</IconBox>
+      </div>
+      {description && (
+        <p className="mt-3 text-xs leading-5 text-slate-500">
+          {description}
+        </p>
+      )}
+    </Card>
+  );
+}
+function ComplianceChartCard({ chartData }) {
+  const width = 600;
+  const height = 220;
+  const left = 42;
+  const right = 12;
+  const top = 12;
+  const bottom = 34;
+  const plotWidth = width - left - right;
+  const plotHeight = height - top - bottom;
 
-                    <td className="border-b border-slate-300 px-3 py-2.5 text-center">
-                      {isTaken ? (
-                        <span className="text-[13px] font-semibold text-blue-600">
-                          Sudah Minum
+  const points = chartData.map((item, index) => ({
+    ...item,
+    x: left + (index / Math.max(1, chartData.length - 1)) * plotWidth,
+    patientY: top + plotHeight - (item.patient / 100) * plotHeight,
+    targetY: top + plotHeight - (item.target / 100) * plotHeight,
+  }));
+  const makeLine = (key) =>
+    points
+      .map(
+        (point, index) =>
+          `${index === 0 ? "M" : "L"} ${point.x} ${point[key]}`
+      )
+      .join(" ");
+
+  const patientLine = makeLine("patientY");
+  const targetLine = makeLine("targetY");
+  const patientArea = `${patientLine} L ${points[points.length - 1]?.x ?? left} ${top + plotHeight} L ${left} ${top + plotHeight} Z`;
+  return (
+    <Card className="lg:col-span-3">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <SectionTitle
+          icon={<ChartNoAxesColumnIncreasing size={22} />}
+          title="Diagram Kepatuhan Pasien"
+          subtitle="Perbandingan progres harian dengan target."
+        />
+
+        <div className="flex gap-3 text-xs text-slate-500">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-rose-500" />
+            Data pasien
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-teal-600" />
+            Target
+          </span>
+        </div>
+      </div>
+      <div className="w-full overflow-hidden">
+        {chartData.length > 0 ? (
+          <svg
+            viewBox={`0 0 ${width} ${height}`}
+            className="h-auto w-full"
+            role="img"
+            aria-label="Diagram perbandingan progres pasien dengan target"
+          >
+            {/* Pertahankan seluruh isi SVG yang sekarang di sini */}
+          </svg>
+        ) : (
+          <div className="py-12 text-center text-sm text-slate-400">
+            Belum ada data konsumsi obat.
+          </div>
+        )}
+      </div>
+      <p className="mt-1 text-center text-xs text-slate-400">
+        7 hari terakhir · Persentase obat yang diminum
+      </p>
+    </Card>
+  );
+}
+export default function FamilyDashboard() {
+  const [patient, setPatient] = useState(null);
+  const [dashboard, setDashboard] = useState(null);
+  const [schedule, setSchedule] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("Semua");
+
+  const filteredSchedule = schedule.filter((item) => {
+    const cocokNama = item.name
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+    const cocokStatus =
+      filterStatus === "Semua" ||
+      (filterStatus === "taken" && item.status === "taken") ||
+      (filterStatus === "pending" && item.status !== "taken");
+
+    return cocokNama && cocokStatus;
+  });
+  useEffect(() => {
+    let active = true;
+
+    async function loadDashboard() {
+      try {
+        const response = await getFamilyDashboard();
+        const result = response?.data ?? {};
+        if (!active) return;
+
+        setPatient(result.patient ?? null);
+        setDashboard(result.dashboard ?? null);
+
+        const schedules =
+          result.dashboard?.today_schedule ?? [];
+        setSchedule(
+          Array.isArray(schedules)
+            ? schedules.map((item) => ({
+              ...item,
+              name:
+                item.med_name ??
+                item.name ??
+                item.medication_name ??
+                item.medicine_name ??
+                item.nama_obat ??
+                "Obat",
+              time:
+                item.scheduled_time ??
+                item.time ??
+                item.schedule_time ??
+                item.medication_time ??
+                item.waktu ??
+                "--:--",
+            }))
+            : []
+        );
+      } catch (error) {
+        console.error("Gagal memuat Family Dashboard:", error);
+        if (active) {
+          toast.error("Data pemantauan gagal dimuat.");
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    loadDashboard();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+  const handleReminder = async (item) => {
+    if (!patient?.id) {
+      toast.error("Data pasien belum tersedia.");
+      return;
+    }
+
+    try {
+      await sendReminder(patient.id);
+      toast.success(`Pengingat untuk ${item.name} berhasil dikirim.`);
+    } catch (error) {
+      console.error("Gagal mengirim pengingat:", error);
+      toast.error("Pengingat gagal dikirim. Periksa koneksi dan data pasien.");
+    }
+  };
+  const completed = Math.max(0, Number(dashboard?.therapy_day ?? 0));
+
+  const streak = Math.max(
+    0,
+    Number(dashboard?.streak ?? dashboard?.streak_days ?? dashboard?.current_streak ?? 0)
+  );
+
+  const stock = Math.max(
+    0,
+    Number(dashboard?.total_stock ?? dashboard?.remaining_stock ?? dashboard?.stock_remaining ?? 0)
+  );
+
+  const chartData = (dashboard?.daily_history ?? []).map((item) => {
+    const totalSchedule = Number(item.total_schedule ?? 0);
+    const totalTaken = Number(item.total_taken ?? 0);
+
+    return {
+      date: new Date(item.day).toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "short",
+      }),
+      patient:
+        totalSchedule === 0
+          ? 0
+          : Math.round((totalTaken / totalSchedule) * 100),
+      target: 100,
+    };
+  });
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center bg-[#F3F8FA]">
+        <div className="text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-[#D5EEEA] border-t-[#078F83]" />
+          <p className="mt-4 text-sm text-slate-500">
+            Memuat data pemantauan pasien...
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <main className="min-h-screen bg-[#F3F8FA] px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1500px]">
+        <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#008F83]">
+              TBCARE · FAMILY MONITORING
+            </p>
+            <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-[#14233F] sm:text-3xl">
+              Selamat Datang, Pendamping! 👋
+            </h1>
+            <p className="mt-2 text-sm text-slate-500 sm:text-base">
+              Pantau perjalanan pengobatan dan dukung pasien setiap hari.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-2xl border border-[#E5EFED] bg-white px-4 py-3 shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#DDF5F0] font-bold text-[#007F73]">
+              {(patient?.name ?? patient?.nama ?? "P").charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <p className="text-sm font-bold text-[#14233F]">
+                {patient?.name ?? patient?.nama ?? "Pendamping"}
+              </p>
+              <p className="text-xs text-slate-500">Akun pendamping</p>
+            </div>
+          </div>
+        </header>
+        <div className="mb-5 rounded-3xl border border-[#DDEFEA] bg-gradient-to-r from-[#DDF7F0] via-[#EFFAF7] to-[#F9FCF8] p-5 sm:p-7">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="max-w-2xl">
+              <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-bold text-[#087D72]">
+                RINGKASAN PEMANTAUAN
+              </span>
+              <h2 className="mt-3 text-xl font-extrabold text-[#14233F] sm:text-2xl">
+                Setiap langkah berarti.
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Dukungan dan perhatian keluarga membantu pasien tetap
+                konsisten menjalani terapi.
+              </p>
+            </div>
+
+            <div className="hidden h-20 w-20 items-center justify-center rounded-full bg-white/80 text-[#0D9B8E] sm:flex">
+              <CheckCircle2 size={42} strokeWidth={1.5} />
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 items-stretch gap-5 xl:grid-cols-12">
+          <div className="xl:col-span-5">
+            <MedicationScheduleCard
+              schedule={schedule}
+              onReminder={handleReminder}
+              onViewAll={() => setShowScheduleModal(true)}
+            />
+          </div>
+
+          <div className="xl:col-span-3">
+            <TherapyProgressCard dashboard={dashboard} />
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 xl:col-span-2 xl:grid-cols-1">
+            <SummaryCard
+              icon={<Flame size={22} />}
+              title="Konsistensi Pengobatan"
+              value={streak}
+              unit="hari berturut-turut"
+              description="Pantau konsistensi pasien setiap hari."
+              color="amber"
+            />
+            <SummaryCard
+              icon={<Package size={22} />}
+              title="Sisa Persediaan Obat"
+              value={stock}
+              unit="tablet"
+              description="Periksa persediaan secara berkala dan hubungi tenaga kesehatan bila diperlukan."
+              color="green"
+            />
+          </div>
+
+          <div className="xl:col-span-2">
+            <Card className="h-full bg-gradient-to-br from-[#E7F8F3] to-white">
+              <IconBox color="amber">
+                <TrendingUp size={22} />
+              </IconBox>
+
+              <h2 className="mt-4 font-bold text-[#14233F]">
+                Insight Hari Ini
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Pantau jadwal dan perkembangan pasien secara berkala.
+                Berikan dukungan agar pengobatan tetap berjalan sesuai
+                arahan tenaga kesehatan.
+              </p>
+
+              <div className="mt-5 rounded-2xl bg-white/80 p-4">
+                <p className="text-xs text-slate-500">
+                  Hari terapi tercatat
+                </p>
+                <p className="mt-1 text-2xl font-extrabold text-[#087D72]">
+                  {completed} hari
+                </p>
+              </div>
+            </Card>
+          </div>
+
+          <div className="xl:col-span-12">
+            <ComplianceChartCard chartData={chartData} />
+          </div>
+
+        </div>
+        {showScheduleModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white p-5 shadow-xl sm:p-7">
+
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-bold text-[#14233F]">
+                    Semua Jadwal Obat
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Pantau seluruh jadwal konsumsi obat pasien.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowScheduleModal(false)}
+                  className="rounded-xl bg-slate-100 px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-200"
+                >
+                  Tutup
+                </button>
+              </div>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Cari nama obat..."
+                className="mt-5 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#008F83]"
+              />
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {[
+                  { label: "Semua", value: "Semua" },
+                  { label: "Sudah Diminum", value: "taken" },
+                  { label: "Belum Diminum", value: "pending" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setFilterStatus(option.value)}
+                    className={`rounded-xl px-4 py-2 text-xs font-bold transition ${filterStatus === option.value
+                      ? "bg-[#008F83] text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-5 divide-y divide-slate-100 rounded-2xl border border-slate-100">
+                {filteredSchedule.length > 0 ? (
+                  filteredSchedule.map((item, index) => (
+                    <div
+                      key={`${item.name}-${item.time}-${index}`}
+                      className="flex flex-wrap items-center justify-between gap-3 p-4"
+                    >
+                      <div>
+                        <p className="text-sm font-bold text-[#24334D]">
+                          {item.name}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          Jadwal: {item.time}
+                        </p>
+                      </div>
+
+                      {item.status === "taken" ? (
+                        <span className="rounded-xl bg-[#E7F8ED] px-3 py-2 text-xs font-bold text-[#178653]">
+                          Sudah Diminum
                         </span>
                       ) : (
                         <button
                           type="button"
-                          onClick={onSendReminder}
-                          className="text-[13px] font-semibold text-red-500 transition hover:text-red-600 hover:underline"
+                          onClick={() => handleReminder(item)}
+                          className="rounded-xl bg-[#FFE9EA] px-3 py-2 text-xs font-bold text-[#D83F50] hover:bg-[#FFD9DC]"
                         >
-                          Belum Minum
+                          Ingatkan
                         </button>
                       )}
-                    </td>
-                  </tr>
-                );
-              })}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="mt-auto flex justify-center pt-5">
-        <button
-          type="button"
-          onClick={() =>
-            alert(
-              "Menampilkan jadwal lengkap pasien."
-            )
-          }
-          className="rounded-full bg-gradient-to-r from-[#46d9c8] to-[#20bca9] px-8 py-3 text-[15px] font-semibold text-white shadow-[0_4px_10px_rgba(20,184,166,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
-        >
-          Lihat Jadwal Selengkapnya
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function TherapyProgressCard({
-  dashboard,
-}) {
-  const percent = Number(
-    dashboard?.therapy_progress ?? 0
-  );
-
-  const therapyDay = Number(
-    dashboard?.therapy_day ?? 0
-  );
-
-  const radius = 52;
-
-  const circumference =
-    2 * Math.PI * radius;
-
-  const dashOffset =
-    circumference -
-    (percent / 100) *
-      circumference;
-
-  return (
-    <div className="flex h-[385px] w-full flex-col items-center rounded-[24px] bg-white px-4 py-6 shadow-[0_4px_12px_rgba(15,23,42,0.15)]">
-      <h2 className="text-center text-[20px] font-bold leading-tight text-slate-950">
-        Progres Terapi
-        <br />
-        Pasien
-      </h2>
-
-      <div className="mt-6 flex justify-center">
-        <div className="relative h-[140px] w-[140px]">
-          <svg
-            viewBox="0 0 120 120"
-            className="h-full w-full -rotate-90"
-          >
-            <circle
-              cx="60"
-              cy="60"
-              r={radius}
-              fill="none"
-              stroke="#E5E7EB"
-              strokeWidth="10"
-            />
-
-            <circle
-              cx="60"
-              cy="60"
-              r={radius}
-              fill="none"
-              stroke="#16B89A"
-              strokeWidth="10"
-              strokeLinecap="round"
-              strokeDasharray={circumference}
-              strokeDashoffset={dashOffset}
-              className="transition-all duration-700 ease-out"
-            />
-          </svg>
-
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-[29px] font-extrabold text-slate-950">
-              {percent}%
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 text-center">
-        <p className="text-[17px] font-bold text-slate-900">
-          {therapyDay}/180
-        </p>
-
-        <p className="text-[16px] font-semibold text-slate-900">
-          Hari
-        </p>
-      </div>
-
-      <p className="mt-6 text-center text-[12px] leading-5 text-slate-400">
-        Kepatuhan Pasien
-        <br />
-        Mencapai {percent}% Hari Ini
-      </p>
-    </div>
-  );
-}
-
-function ComplianceBadgeCard({
-  dashboard,
-}) {
-  const streak =
-    dashboard?.streak ?? 0;
-
-  return (
-    <div className="h-[170px] w-full rounded-[24px] bg-white px-6 py-5 shadow-[0_4px_12px_rgba(15,23,42,0.15)]">
-      <h3 className="text-[19px] font-bold leading-tight text-slate-950">
-        Badge Kepatuhan
-        <br />
-        Pasien
-      </h3>
-
-      <div className="mt-5 flex items-baseline gap-1">
-        <span className="text-[33px] font-extrabold leading-none text-slate-950">
-          {streak}
-        </span>
-
-        <span className="text-[17px] font-semibold text-slate-900">
-          Hari
-        </span>
-      </div>
-
-      <p className="mt-1 text-[14px] text-slate-900">
-        Berturut-turut
-      </p>
-    </div>
-  );
-}
-
-function RemainingStockCard({
-  dashboard,
-}) {
-  const stock =
-    dashboard?.total_stock ?? 0;
-
-  return (
-    <div className="h-[125px] w-full rounded-[24px] bg-white px-6 py-5 shadow-[0_4px_12px_rgba(15,23,42,0.15)]">
-      <h3 className="text-[18px] font-bold leading-tight text-slate-950">
-        Sisa Obat
-        <br />
-        Pasien
-      </h3>
-
-      <div className="mt-4 flex items-center justify-between">
-        <div className="flex items-baseline gap-1">
-          <span className="text-[32px] font-extrabold leading-none text-slate-950">
-            {stock}
-          </span>
-
-          <span className="text-[17px] font-semibold text-slate-900">
-            Tablet
-          </span>
-        </div>
-
-        <div className="relative mr-1 h-[18px] w-[42px] rotate-[-8deg] rounded-full border-[4px] border-cyan-400">
-          <div className="absolute left-1/2 top-1/2 h-[4px] w-[27px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-300" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function WhatsappBanner() {
-  return (
-    <div className="h-[125px] w-full rounded-[24px] bg-white px-5 py-5 shadow-[0_4px_12px_rgba(15,23,42,0.15)]">
-      <div className="flex items-center gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-green-500">
-          <Phone
-            className="h-6 w-6 text-white"
-            strokeWidth={2}
-          />
-        </div>
-
-        <div className="min-w-0">
-          <h3 className="text-[18px] font-bold text-slate-950">
-            Notifikasi Aktif
-          </h3>
-
-          <p className="mt-1 text-[13px] text-slate-400">
-            Ingatkan pasien!
-          </p>
-
-          <p className="text-[12px] leading-4 text-slate-400">
-            Notifikasi akan dikirim
-            <br />
-            melalui WhatsApp
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-const CHART_PATH_LENGTH = 1400;
-
-function ComplianceChartCard({
-  dashboard,
-}) {
-  const [chartData, setChartData] =
-    useState(
-      INITIAL_CHART_DATA
-    );
-
-  const [isDrawn, setIsDrawn] =
-    useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(
-      () => setIsDrawn(true),
-      100
-    );
-
-    return () =>
-      clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (
-      dashboard?.daily_progress !=
-      null
-    ) {
-      setChartData((prev) => {
-        const next = [...prev];
-
-        next[next.length - 1] =
-          Number(
-            dashboard.daily_progress
-          );
-
-        return next;
-      });
-    }
-  }, [
-    dashboard?.daily_progress,
-  ]);
-
-  const width = 650;
-  const height = 250;
-
-  const xStep =
-    width /
-    (CHART_LABELS.length - 1);
-
-  const toPoints = (series) =>
-    series
-      .map((value, index) => {
-        const x =
-          index * xStep;
-
-        const y =
-          height -
-          (value / 100) * height;
-
-        return `${x},${y}`;
-      })
-      .join(" ");
-
-  const drawStyle = (
-    delaySeconds
-  ) => ({
-    strokeDasharray:
-      CHART_PATH_LENGTH,
-    strokeDashoffset: isDrawn
-      ? 0
-      : CHART_PATH_LENGTH,
-    transition: `stroke-dashoffset 1.4s ease-out ${delaySeconds}s`,
-  });
-
-  return (
-    <div className="rounded-[24px] bg-white p-6 shadow-[0_4px_12px_rgba(15,23,42,0.10)]">
-      <h2 className="text-[21px] font-bold text-slate-950">
-        Diagram Kepatuhan Pasien
-      </h2>
-
-      <div
-        className="mt-5 rounded-[22px] p-4"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, rgba(203,213,225,0.42) 2px, transparent 2px)",
-          backgroundSize:
-            "24px 24px",
-        }}
-      >
-        <div className="flex gap-4">
-          <div className="flex h-[250px] flex-col justify-between py-1 text-[13px] font-medium text-slate-600">
-            <span>100%</span>
-            <span>80%</span>
-            <span>50%</span>
-            <span>20%</span>
-            <span>0</span>
-          </div>
-
-          <div className="min-w-0 flex-1 overflow-hidden">
-            <svg
-              viewBox={`0 0 ${width} ${height}`}
-              className="h-[250px] w-full"
-              preserveAspectRatio="none"
-            >
-              <line
-                x1="0"
-                y1="0"
-                x2="0"
-                y2={height}
-                stroke="#111827"
-                strokeWidth="3"
-              />
-
-              <line
-                x1="0"
-                y1={height}
-                x2={width}
-                y2={height}
-                stroke="#111827"
-                strokeWidth="3"
-              />
-
-              {[0, 20, 50, 80, 100].map(
-                (mark) => (
-                  <line
-                    key={mark}
-                    x1="0"
-                    x2={width}
-                    y1={
-                      height -
-                      (mark / 100) *
-                        height
-                    }
-                    y2={
-                      height -
-                      (mark / 100) *
-                        height
-                    }
-                    stroke="#E8EDF3"
-                    strokeWidth="1"
-                    strokeDasharray="4 7"
-                  />
-                )
-              )}
-
-              <polyline
-                points={toPoints(
-                  TARGET_LINE_DATA
+                    </div>
+                  ))
+                ) : (
+                  <p className="p-8 text-center text-sm text-slate-500">
+                    Jadwal obat tidak ditemukan.
+                  </p>
                 )}
-                fill="none"
-                stroke="#2CBF56"
-                strokeWidth="4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={drawStyle(0)}
-              />
+              </div>
 
-              <polyline
-                points={toPoints(
-                  chartData
-                )}
-                fill="none"
-                stroke="#8C1F1F"
-                strokeWidth="4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={drawStyle(0.2)}
-              />
-            </svg>
-
-            <div className="mt-2 flex justify-between text-[12px] font-medium text-slate-500">
-              {CHART_LABELS.map(
-                (label) => (
-                  <span key={label}>
-                    {label}
-                  </span>
-                )
-              )}
             </div>
           </div>
-        </div>
+        )}
+        <footer className="py-7 text-center text-xs text-slate-400">
+          TBcare · Mendampingi perjalanan pengobatan dengan kepedulian.
+        </footer>
       </div>
-    </div>
+    </main>
   );
 }
-
-
-const FamilyDashboard = () => {
-
-  const [patient, setPatient] =
-    useState(DEMO_PATIENT);
-
-  const [dashboard, setDashboard] =
-    useState(DEMO_DASHBOARD);
-
-  const [isNotifOpen, setIsNotifOpen] =
-    useState(false);
-
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const response =
-          await getFamilyDashboard();
-
-        console.log(
-          "RESPONSE :",
-          response
-        );
-
-        if (response?.data?.patient) {
-          setPatient(
-            response.data.patient
-          );
-        }
-
-        if (response?.data?.dashboard) {
-          setDashboard(
-            response.data.dashboard
-          );
-        }
-      } catch (err) {
-        console.error(
-          "Family dashboard API:",
-          err
-        );
-
-      }
-    };
-
-    fetchDashboard();
-  }, []);
-
-
-  const handleSendReminder =
-    async () => {
-      try {
-        await sendReminder(
-          patient.id,
-          `Pendamping mengingatkan Anda untuk segera minum obat sesuai jadwal.`
-        );
-
-        toast.success(
-          "Pengingat berhasil dikirim."
-        );
-      } catch (err) {
-        console.error(err);
-
-        toast.error(
-          "Gagal mengirim pengingat."
-        );
-      }
-    };
-
-  return (
-    <div
-      className="min-h-screen w-full overflow-x-hidden bg-[#F6F7FB]"
-      style={{
-        fontFamily:
-          "'Poppins', sans-serif",
-      }}
-    >
-      <DashboardHeader
-        isNotifOpen={
-          isNotifOpen
-        }
-        onToggleNotif={() =>
-          setIsNotifOpen(
-            (prev) => !prev
-          )
-        }
-      />
-
-      <main className="px-8 pb-10 pt-7 lg:px-10">
-  
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,500px)_240px_240px_minmax(300px,1fr)]">
-
-          <ScheduleCard
-            dashboard={dashboard}
-            onSendReminder={
-              handleSendReminder
-            }
-          />
-
-          <TherapyProgressCard
-            dashboard={dashboard}
-          />
-
-          <div className="flex flex-col gap-6">
-            <ComplianceBadgeCard
-              dashboard={dashboard}
-            />
-
-            <RemainingStockCard
-              dashboard={dashboard}
-            />
-          </div>
-
-          <div className="flex items-end">
-            <WhatsappBanner />
-          </div>
-        </div>
-
-        <div className="mt-7 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,500px)_240px_240px_minmax(300px,1fr)]">
-          <div className="xl:col-start-2 xl:col-span-3">
-            <ComplianceChartCard
-              dashboard={dashboard}
-            />
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-};
-
-export default FamilyDashboard;
