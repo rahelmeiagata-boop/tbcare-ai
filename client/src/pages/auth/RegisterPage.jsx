@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { X, Check, Eye, EyeOff } from 'lucide-react';
@@ -7,22 +8,10 @@ import toast from 'react-hot-toast';
 function GoogleIcon({ className = '' }) {
   return (
     <svg viewBox="0 0 18 18" className={className} aria-hidden="true">
-      <path
-        fill="#4285F4"
-        d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
-      />
-      <path
-        fill="#34A853"
-        d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.348 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"
-      />
-      <path
-        fill="#EA4335"
-        d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 6.29C4.672 4.163 6.656 2.58 9 2.58z"
-      />
+      <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" />
+      <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" />
+      <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.348 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z" />
+      <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 6.29C4.672 4.163 6.656 2.58 9 2.58z" />
     </svg>
   );
 }
@@ -77,6 +66,7 @@ function GoogleAccountModal({ onSelect, onClose }) {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
@@ -100,7 +90,10 @@ function GoogleAccountModal({ onSelect, onClose }) {
             Pilih akun
           </h2>
         </div>
-        <p className="mt-1 text-sm text-slate-500">untuk melanjutkan ke TBCare AI</p>
+
+        <p className="mt-1 text-sm text-slate-500">
+          untuk melanjutkan ke TBCare AI
+        </p>
 
         <div className="mt-4 flex flex-col gap-1">
           {DUMMY_GOOGLE_ACCOUNTS.map((email) => (
@@ -132,6 +125,7 @@ function GoogleAccountModal({ onSelect, onClose }) {
 
 const INITIAL_FORM = {
   name: '',
+  username: '',
   email: '',
   phone: '',
   gender: '',
@@ -152,7 +146,11 @@ export default function RegisterPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === 'username' ? value.toLowerCase() : value,
+    }));
 
     if ((name === 'password' || name === 'confirmPassword') && passwordError) {
       setPasswordError('');
@@ -161,6 +159,21 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!formData.name.trim()) {
+      toast.error('Nama lengkap wajib diisi.');
+      return;
+    }
+
+    if (!formData.username.trim()) {
+      toast.error('Username wajib diisi.');
+      return;
+    }
+
+    if (!/^[a-z0-9_]{3,30}$/.test(formData.username.trim())) {
+      toast.error('Username harus 3-30 karakter, hanya huruf kecil, angka, dan underscore.');
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
       setPasswordError('Password dan Konfirmasi Password tidak cocok.');
@@ -179,8 +192,9 @@ export default function RegisterPage() {
 
     try {
       const response = await register({
-        nama: formData.name,
-        email: formData.email,
+        nama: formData.name.trim(),
+        username: formData.username.trim().toLowerCase(),
+        email: formData.email.trim(),
         nomor_hp: formData.phone,
         jenis_kelamin: formData.gender,
         role: formData.role,
@@ -192,20 +206,17 @@ export default function RegisterPage() {
       console.log('REGISTER BERHASIL:', response);
 
       toast.success('Akun berhasil dibuat. Silakan login.');
-
       navigate('/login');
     } catch (err) {
       console.error('REGISTER ERROR:', err);
 
       toast.error(
-        err.response?.data?.message ||
-        'Gagal membuat akun.'
+        err.response?.data?.message || 'Gagal membuat akun.'
       );
     }
   };
 
   const handleGoogleAccountSelect = (email) => {
-
     console.log('Akun Google dipilih (simulasi):', email);
     setIsGoogleModalOpen(false);
     navigate('/dashboard');
@@ -226,7 +237,6 @@ export default function RegisterPage() {
         </Link>
 
         <div className="mt-6 flex flex-col gap-8 lg:flex-row lg:items-stretch lg:gap-10">
-
           <div className="hidden shrink-0 lg:flex lg:w-56 lg:flex-col lg:justify-end">
             <img
               src="/assets/register-il.png"
@@ -239,6 +249,7 @@ export default function RegisterPage() {
             <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">
               Buat Akun Baru
             </h1>
+
             <p className="mt-2 text-sm leading-relaxed text-slate-600 sm:text-base">
               Daftar untuk memulai perjalanan terapi anda bersama TBCare AI
             </p>
@@ -252,9 +263,27 @@ export default function RegisterPage() {
                 required
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="Masukkan Nama Lengkap"
+                placeholder="Masukkan nama lengkap"
                 autoComplete="name"
               />
+
+              <TextField
+                label="Username"
+                id="username"
+                name="username"
+                type="text"
+                required
+                minLength={3}
+                maxLength={30}
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="Contoh: pendamping_pasien123"
+                autoComplete="username"
+              />
+
+              <p className="text-xs text-slate-500">
+                Gunakan 3-30 karakter. Hanya huruf kecil, angka, dan underscore.
+              </p>
 
               <TextField
                 label="Email"
@@ -291,12 +320,12 @@ export default function RegisterPage() {
                     onClick={() =>
                       setFormData((prev) => ({
                         ...prev,
-                        role: "patient",
+                        role: 'patient',
                       }))
                     }
-                    className={`rounded-lg border px-4 py-3 text-sm font-semibold transition ${formData.role === "patient"
-                        ? "border-blue-500 bg-blue-50 text-blue-600"
-                        : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    className={`rounded-lg border px-4 py-3 text-sm font-semibold transition ${formData.role === 'patient'
+                        ? 'border-blue-500 bg-blue-50 text-blue-600'
+                        : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
                       }`}
                   >
                     Pasien
@@ -307,12 +336,12 @@ export default function RegisterPage() {
                     onClick={() =>
                       setFormData((prev) => ({
                         ...prev,
-                        role: "family",
+                        role: 'family',
                       }))
                     }
-                    className={`rounded-lg border px-4 py-3 text-sm font-semibold transition ${formData.role === "family"
-                        ? "border-teal-500 bg-teal-50 text-teal-600"
-                        : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    className={`rounded-lg border px-4 py-3 text-sm font-semibold transition ${formData.role === 'family'
+                        ? 'border-teal-500 bg-teal-50 text-teal-600'
+                        : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
                       }`}
                   >
                     Pendamping
@@ -379,12 +408,18 @@ export default function RegisterPage() {
                   required
                   className="peer sr-only"
                 />
+
                 <span
-                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-blue-500 peer-focus-visible:ring-offset-2 ${agreedToTerms ? 'border-teal-500 bg-teal-500' : 'border-slate-300 bg-slate-100'
+                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-blue-500 peer-focus-visible:ring-offset-2 ${agreedToTerms
+                      ? 'border-teal-500 bg-teal-500'
+                      : 'border-slate-300 bg-slate-100'
                     }`}
                 >
-                  {agreedToTerms && <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />}
+                  {agreedToTerms && (
+                    <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
+                  )}
                 </span>
+
                 <span className="text-sm text-slate-900 sm:text-base">
                   Saya setuju dengan{' '}
                   <a

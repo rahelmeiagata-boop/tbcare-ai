@@ -4,12 +4,16 @@ import toast from "react-hot-toast";
 
 import {
     getFamilies,
+    searchFamily,
     addFamily,
     deleteFamily,
 } from "../../services/familyService";
 
 const FamilyPage = () => {
-    const [email, setEmail] = useState("");
+    const [keyword, setKeyword] = useState("");
+    const [searchResults, setSearchResults] = useState([]);
+    const [selectedFamily, setSelectedFamily] = useState(null);
+    const [searching, setSearching] = useState(false);
     const [families, setFamilies] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -31,30 +35,51 @@ const FamilyPage = () => {
         fetchFamilies();
     }, []);
 
-    const handleTambah = async () => {
-        if (!email.trim()) {
-            toast.error(
-                "Silakan masukkan email anggota keluarga terlebih dahulu."
-            );
+    const handleSearch = async () => {
+        if (!keyword.trim()) {
+            toast.error("Masukkan nama atau username terlebih dahulu.");
             return;
         }
 
         try {
-            await addFamily(email.trim());
+            setSearching(true);
+            const response = await searchFamily(keyword.trim());
+            setSearchResults(response.data || []);
 
-            toast.success(
-                "Anggota keluarga berhasil ditambahkan."
-            );
+            if (!response.data?.length) {
+                toast.error("Akun pendamping tidak ditemukan.");
+            }
+        } catch (err) {
+            console.error("SEARCH FAMILY ERROR:", err);
+            toast.error("Gagal mencari akun.");
+        } finally {
+            setSearching(false);
+        }
+    };
 
-            setEmail("");
+    const handleTambah = async () => {
+        if (!selectedFamily) return;
+
+        const yakin = window.confirm(
+            `Hubungkan akun ${selectedFamily.nama} (@${selectedFamily.username}) sebagai pendamping?`
+        );
+
+        if (!yakin) return;
+
+        try {
+            await addFamily(selectedFamily.id);
+
+            toast.success("Akun pendamping berhasil dihubungkan.");
+
+            setKeyword("");
+            setSearchResults([]);
+            setSelectedFamily(null);
 
             await fetchFamilies();
         } catch (err) {
-            console.error("ADD FAMILY ERROR:", err);
-
             toast.error(
                 err.response?.data?.message ||
-                "Gagal menambahkan anggota keluarga."
+                "Gagal menghubungkan akun."
             );
         }
     };
@@ -136,68 +161,88 @@ const FamilyPage = () => {
 
                 <div className="flex flex-col lg:flex-row gap-4">
                     <input
-                        type="email"
-                        placeholder="Masukkan email..."
-                        value={email}
-                        onChange={(e) =>
-                            setEmail(e.target.value)
-                        }
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                handleTambah();
-                            }
+                        type="text"
+                        placeholder="Masukkan nama atau username pendamping..."
+                        value={keyword}
+                        onChange={(e) => {
+                            setKeyword(e.target.value);
+                            setSearchResults([]);
+                            setSelectedFamily(null);
                         }}
-                        className="
-                            flex-1
-                            h-14
-                            px-5
-                            rounded-2xl
-                            bg-white
-                            border
-                            border-slate-200
-                            text-gray-800
-                            text-sm
-                            md:text-base
-                            outline-none
-                            transition-all
-                            duration-200
-                            placeholder:text-gray-400
-                            focus:border-blue-400
-                            focus:ring-4
-                            focus:ring-blue-100
-                            shadow-sm
-                        "
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") handleSearch();
+                        }}
+                        className="flex-1 h-14 px-5 rounded-2xl bg-white border border-slate-200 text-gray-800 text-sm md:text-base outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100 shadow-sm"
                     />
 
                     <button
                         type="button"
-                        onClick={handleTambah}
-                        className="
-                            h-14
-                            px-9
-                            rounded-2xl
-                            bg-gradient-to-r
-                            from-blue-600
-                            to-blue-700
-                            text-white
-                            font-semibold
-                            text-base
-                            shadow-[0_6px_16px_rgba(37,99,235,0.22)]
-                            transition-all
-                            duration-200
-                            ease-out
-                            hover:-translate-y-0.5
-                            hover:from-blue-500
-                            hover:to-blue-700
-                            hover:shadow-[0_9px_22px_rgba(37,99,235,0.30)]
-                            active:translate-y-0
-                            active:scale-[0.98]
-                            whitespace-nowrap
-                        "
+                        onClick={handleSearch}
+                        disabled={searching}
+                        className="h-14 px-9 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"
                     >
-                        Tambah
+                        {searching ? "Mencari..." : "Cari Akun"}
                     </button>
                 </div>
+
+                {searchResults.length > 0 && (
+                    <div className="mt-5 space-y-3">
+                        <h3 className="font-semibold text-gray-800">
+                            Hasil Pencarian
+                        </h3>
+
+                        {searchResults.map((family) => (
+                            <button
+                                key={family.id}
+                                type="button"
+                                onClick={() => setSelectedFamily(family)}
+                                className={`w-full text-left p-4 rounded-2xl border transition ${selectedFamily?.id === family.id
+                                        ? "border-blue-500 bg-blue-50"
+                                        : "border-slate-200 hover:bg-slate-50"
+                                    }`}
+                            >
+                                <p className="font-semibold text-gray-900">
+                                    {family.nama}
+                                </p>
+                                <p className="text-sm text-blue-600">
+                                    @{family.username}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                    {family.email}
+                                </p>
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {selectedFamily && (
+                    <div className="mt-5 p-5 rounded-2xl border border-blue-200 bg-blue-50">
+                        <h3 className="font-bold text-gray-900">
+                            Detail Akun Pendamping
+                        </h3>
+
+                        <p className="mt-3 text-sm text-gray-700">
+                            Nama: {selectedFamily.nama}
+                        </p>
+                        <p className="text-sm text-gray-700">
+                            Username: @{selectedFamily.username}
+                        </p>
+                        <p className="text-sm text-gray-700">
+                            Email: {selectedFamily.email}
+                        </p>
+                        <p className="text-sm text-gray-700">
+                            Tipe akun: {selectedFamily.role}
+                        </p>
+
+                        <button
+                            type="button"
+                            onClick={handleTambah}
+                            className="mt-4 px-6 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700"
+                        >
+                            Hubungkan Akun
+                        </button>
+                    </div>
+                )}
             </section>
 
             {/* CARD DAFTAR ANGGOTA */}

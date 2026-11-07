@@ -1,3 +1,4 @@
+import db from "../config/db.js";
 import {
     createNotification,
     getNotifications,
@@ -12,21 +13,48 @@ import {
 export const sendReminder = async (req, res) => {
     try {
         const { user_id, message } = req.body;
+        const familyId = req.user.id;
 
-        await createNotification(
+        if (!user_id || !message) {
+            return errorResponse(
+                res,
+                "User ID dan pesan wajib diisi."
+            );
+        }
+
+        // Periksa hubungan pendamping dan pasien
+        const [connections] = await db.execute(
+            `
+            SELECT id
+            FROM family_connections
+            WHERE patient_id = ?
+            AND family_id = ?
+            `,
+            [user_id, familyId]
+        );
+
+        if (connections.length === 0) {
+            return errorResponse(
+                res,
+                "Pasien tidak terhubung dengan akun pendamping ini.",
+                403
+            );
+        }
+
+        const result = await createNotification(
             user_id,
             message
         );
 
-        successResponse(
+        return successResponse(
             res,
-            "Pengingat berhasil dikirim."
+            result.message,
+            result
         );
+
     } catch (err) {
-        errorResponse(
-            res,
-            err.message
-        );
+        console.error("SEND REMINDER ERROR:", err);
+        return errorResponse(res, err.message);
     }
 };
 

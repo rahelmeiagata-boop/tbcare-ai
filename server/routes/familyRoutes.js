@@ -5,34 +5,21 @@ import {
   getAll,
   remove,
   patient,
+  search,
 } from "../controllers/familyController.js";
 
 import { authenticate } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post(
-  "/",
-  authenticate,
-  create
-);
+router.get("/search", authenticate, search);
 
-router.get(
-  "/",
-  authenticate,
-  getAll
-);
+router.get("/", authenticate, getAll);
 
-router.delete(
-  "/:id",
-  authenticate,
-  remove
-);
+router.post("/", authenticate, create);
 
-router.get(
-  "/patient",
-  authenticate,
-  patient
-);
+router.get("/patient", authenticate, patient);
+
+router.delete("/:id", authenticate, remove);
 
 export default router;

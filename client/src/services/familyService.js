@@ -1,4 +1,3 @@
-
 import api from "./api";
 
 export const getFamilies = async () => {
@@ -6,8 +5,15 @@ export const getFamilies = async () => {
   return response.data;
 };
 
-export const addFamily = async (email) => {
-  const response = await api.post("/family", { email });
+export const searchFamily = async (keyword) => {
+  const response = await api.get("/family/search", {
+    params: { keyword },
+  });
+  return response.data;
+};
+
+export const addFamily = async (patientId) => {
+  const response = await api.post("/family", { patientId });
   return response.data;
 };
 
@@ -24,11 +30,4 @@ export const getPatient = async () => {
 export const getFamilyDashboard = async () => {
   const response = await api.get("/dashboard/family");
   return response.data;
-};
-
-// Sementara: endpoint pengingat belum dikonfirmasi.
-export const sendReminder = async () => {
-  throw new Error(
-    "Fitur pengingat belum terhubung ke endpoint backend."
-  );
 };

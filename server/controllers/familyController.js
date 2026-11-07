@@ -3,6 +3,7 @@ import {
   getFamilies,
   deleteFamily,
   getPatient,
+  searchFamily,
 } from "../services/familyService.js";
 
 import {
@@ -13,16 +14,27 @@ import {
 // Tambah anggota keluarga
 export const create = async (req, res) => {
   try {
-    const { email } = req.body;
+    if (req.user.role !== "family") {
+      return errorResponse(
+        res,
+        "Hanya akun pendamping yang dapat menghubungkan pasien.",
+        403
+      );
+    }
+    const { patientId } = req.body;
+
+    if (!patientId) {
+      return errorResponse(res, "Pilih akun pasien terlebih dahulu.");
+    }
 
     const result = await addFamily(
       req.user.id,
-      email
+      patientId
     );
 
     successResponse(
       res,
-      "Anggota keluarga berhasil ditambahkan.",
+      "Akun pasien berhasil dihubungkan.",
       result,
       201
     );
@@ -84,4 +96,38 @@ export const patient = async (req, res) => {
 
   }
 
+};
+
+
+export const search = async (req, res) => {
+  try {
+    if (req.user.role !== "family") {
+      return errorResponse(
+        res,
+        "Hanya akun pendamping yang dapat mencari pasien.",
+        403
+      );
+    }
+    const { keyword } = req.query;
+
+    if (!keyword || !keyword.trim()) {
+      return errorResponse(
+        res,
+        "Masukkan nama atau username pasien."
+      );
+    }
+
+    const result = await searchFamily(
+      keyword,
+      req.user.id
+    );
+
+    successResponse(
+      res,
+      "Pencarian pasien berhasil.",
+      result
+    );
+  } catch (err) {
+    errorResponse(res, err.message);
+  }
 };

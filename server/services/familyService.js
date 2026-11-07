@@ -1,29 +1,24 @@
 import db from "../config/db.js";
 
 // Tambah anggota keluarga berdasarkan email
-export const addFamily = async (patientId, email) => {
-  // Cari user berdasarkan email
+// Tambah pendamping berdasarkan ID akun
+export const addFamily = async (familyId, patientId) => {
   const [users] = await db.execute(
     `
-    SELECT id, nama, email
+    SELECT id, nama, username, email, role
     FROM users
-    WHERE email = ?
+    WHERE id = ?
+    AND role = 'patient'
     `,
-    [email]
+    [patientId]
   );
 
   if (users.length === 0) {
-    throw new Error("Akun keluarga tidak ditemukan.");
+    throw new Error("Akun pasien tidak ditemukan.");
   }
 
-  const family = users[0];
+  const patient = users[0];
 
-  // Tidak boleh menambahkan diri sendiri
-  if (family.id === patientId) {
-    throw new Error("Tidak dapat menambahkan akun sendiri.");
-  }
-
-  // Cek apakah sudah terhubung
   const [exists] = await db.execute(
     `
     SELECT id
@@ -31,31 +26,23 @@ export const addFamily = async (patientId, email) => {
     WHERE patient_id = ?
     AND family_id = ?
     `,
-    [patientId, family.id]
+    [patient.id, familyId]
   );
 
   if (exists.length > 0) {
-    throw new Error("Anggota keluarga sudah ditambahkan.");
+    throw new Error("Akun pasien sudah terhubung.");
   }
 
-  // Simpan relasi
   await db.execute(
     `
     INSERT INTO family_connections
-    (
-      patient_id,
-      family_id
-    )
-    VALUES
-    (
-      ?,
-      ?
-    )
+    (patient_id, family_id)
+    VALUES (?, ?)
     `,
-    [patientId, family.id]
+    [patient.id, familyId]
   );
 
-  return family;
+  return patient;
 };
 
 // Ambil daftar keluarga
@@ -115,4 +102,36 @@ export const getPatient = async (familyId) => {
 
   return rows[0];
 
+};
+
+export const searchFamily = async (keyword, familyId) => {
+  const search = `%${keyword.trim()}%`;
+
+  const [rows] = await db.execute(
+    `
+    SELECT
+      u.id,
+      u.nama,
+      u.username,
+      u.email,
+      u.role,
+      EXISTS (
+        SELECT 1
+        FROM family_connections fc
+        WHERE fc.patient_id = u.id
+        AND fc.family_id = ?
+      ) AS is_connected
+    FROM users u
+    WHERE u.role = 'patient'
+      AND (
+        u.nama LIKE ?
+        OR u.username LIKE ?
+      )
+    ORDER BY u.nama ASC
+    LIMIT 10
+    `,
+    [familyId, search, search]
+  );
+
+  return rows;
 };

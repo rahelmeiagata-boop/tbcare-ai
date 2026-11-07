@@ -61,16 +61,16 @@ const checkMedicationSchedules = async () => {
 
       const [existing] = await db.execute(
         `
-                SELECT id
-                FROM notifications
-                WHERE user_id = ?
-                  AND message = ?
-                  AND DATE(created_at) = CURDATE()
-                LIMIT 1
-                `,
+  SELECT id
+  FROM notifications
+  WHERE user_id = ?
+    AND schedule_id = ?
+    AND DATE(created_at) = CURDATE()
+  LIMIT 1
+  `,
         [
           schedule.user_id,
-          message,
+          schedule.schedule_id,
         ]
       );
 
@@ -138,29 +138,23 @@ const checkMedicationSchedules = async () => {
 
         await db.execute(
           `
-                    INSERT INTO notifications
-                    (
-                        user_id,
-                        message,
-                        channel,
-                        status,
-                        is_read
-                    )
-                    VALUES
-                    (
-                        ?,
-                        ?,
-                        'web_push',
-                        'terkirim',
-                        0
-                    )
-                    `,
+  INSERT INTO notifications
+  (
+    user_id,
+    schedule_id,
+    message,
+    channel,
+    status,
+    is_read
+  )
+  VALUES (?, ?, ?, 'web_push', 'terkirim', 0)
+  `,
           [
             schedule.user_id,
+            schedule.schedule_id,
             message,
           ]
         );
-
 
         console.log(
           `🔔 NOTIF OTOMATIS SELESAI: ${schedule.med_name} -> user ${schedule.user_id}`
