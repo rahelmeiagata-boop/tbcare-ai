@@ -14,6 +14,7 @@ import {
   getFamilyDashboard,
   searchFamily,
   addFamily,
+  getPatientJourney,
 } from "../../services/familyService";
 import { sendReminder } from "../../services/notificationService";
 import { toast } from "react-toastify";
@@ -443,6 +444,7 @@ export default function FamilyDashboard() {
   const [filterStatus, setFilterStatus] = useState("Semua");
   const [reminderCooldowns, setReminderCooldowns] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const [journey, setJourney] = useState([]);
 
   const [searchPatient, setSearchPatient] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -479,11 +481,39 @@ export default function FamilyDashboard() {
       try {
         const response = await getFamilyDashboard();
         const result = response?.data ?? {};
+
         if (!active) return;
 
-        setPatient(result.patient ?? null);
+        const connectedPatient = result.patient ?? null;
+
+        setPatient(connectedPatient);
         setDashboard(result.dashboard ?? null);
 
+        // Ambil riwayat Treatment Journey pasien
+        if (connectedPatient?.id) {
+          try {
+            const journeyResponse = await getPatientJourney(
+              connectedPatient.id
+            );
+
+            if (!active) return;
+
+            setJourney(
+              journeyResponse?.data ?? []
+            );
+          } catch (error) {
+            console.error(
+              "Gagal mengambil Treatment Journey:",
+              error.response?.data || error
+            );
+
+            if (active) {
+              setJourney([]);
+            }
+          }
+        } else {
+          setJourney([]);
+        }
         const schedules =
           result.dashboard?.today_schedule ?? [];
         setSchedule(
@@ -839,7 +869,7 @@ export default function FamilyDashboard() {
           )}
         </Card>
         <div className="grid grid-cols-1 items-stretch gap-5 xl:grid-cols-12">
-          <div className="xl:col-span-5">
+          <div className="xl:col-span-4">
             <MedicationScheduleCard
               schedule={schedule}
               onReminder={handleReminder}
@@ -871,31 +901,63 @@ export default function FamilyDashboard() {
             />
           </div>
 
-          <div className="xl:col-span-2">
-            <Card className="h-full bg-gradient-to-br from-[#E7F8F3] to-white">
-              <IconBox color="amber">
-                <TrendingUp size={22} />
-              </IconBox>
 
-              <h2 className="mt-4 font-bold text-[#14233F]">
-                Insight Hari Ini
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Pantau jadwal dan perkembangan pasien secara berkala.
-                Berikan dukungan agar pengobatan tetap berjalan sesuai
-                arahan tenaga kesehatan.
-              </p>
+          <div className="xl:col-span-3">
+            <Card className="h-full">
+              <SectionTitle
+                icon={<CalendarDays size={22} />}
+                title="Treatment Journey"
+                subtitle="Riwayat kondisi pasien"
+              />
 
-              <div className="mt-5 rounded-2xl bg-white/80 p-4">
-                <p className="text-xs text-slate-500">
-                  Hari terapi tercatat
+              {journey.length > 0 ? (
+                <div className="space-y-4">
+                  {journey.slice(0, 3).map((item) => (
+                    <div
+                      key={item.id}
+                      className="border-b border-[#EDF1F5] pb-3 last:border-0 last:pb-0"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs font-bold text-[#14233F]">
+                          {new Date(`${item.date}T00:00:00`).toLocaleDateString(
+                            "id-ID",
+                            {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            }
+                          )}
+                        </p>
+
+                        <span className="rounded-full bg-[#E7F8F4] px-2 py-1 text-[10px] font-bold text-[#008F83]">
+                          {item.condition}
+                        </span>
+                      </div>
+
+                      <p className="mt-2 text-xs text-slate-500">
+                        Keluhan
+                      </p>
+                      <p className="text-sm text-slate-700">
+                        {item.complaints || "-"}
+                      </p>
+
+                      <p className="mt-2 text-xs text-slate-500">
+                        Catatan
+                      </p>
+                      <p className="text-sm text-slate-700">
+                        {item.notes || "-"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="py-5 text-center text-sm text-slate-400">
+                  Belum ada riwayat check-in.
                 </p>
-                <p className="mt-1 text-2xl font-extrabold text-[#087D72]">
-                  {completed} hari
-                </p>
-              </div>
+              )}
             </Card>
           </div>
+
 
           <div className="xl:col-span-12">
             <ComplianceChartCard chartData={chartData} />

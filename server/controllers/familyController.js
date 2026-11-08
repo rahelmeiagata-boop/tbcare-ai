@@ -4,6 +4,7 @@ import {
   deleteFamily,
   getPatient,
   searchFamily,
+  getPatientCheckins,
 } from "../services/familyService.js";
 
 import {
@@ -129,5 +130,46 @@ export const search = async (req, res) => {
     );
   } catch (err) {
     errorResponse(res, err.message);
+  }
+};
+
+// Ambil Treatment Journey pasien untuk pendamping
+export const getJourney = async (req, res) => {
+  try {
+    if (req.user.role !== "family") {
+      return errorResponse(
+        res,
+        "Hanya akun pendamping yang dapat melihat riwayat pasien.",
+        403
+      );
+    }
+
+    const patientId = Number(req.params.patientId);
+
+    if (!Number.isInteger(patientId) || patientId <= 0) {
+      return errorResponse(res, "ID pasien tidak valid.", 400);
+    }
+
+    const result = await getPatientCheckins(
+      req.user.id,
+      patientId
+    );
+
+    if (result === null) {
+      return errorResponse(
+        res,
+        "Pasien tidak terhubung dengan akun pendamping ini.",
+        403
+      );
+    }
+
+    return successResponse(
+      res,
+      "Riwayat Treatment Journey berhasil diambil.",
+      result
+    );
+  } catch (err) {
+    console.error(err);
+    return errorResponse(res, err.message);
   }
 };

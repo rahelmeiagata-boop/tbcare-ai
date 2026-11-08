@@ -1,7 +1,6 @@
 import db from "../config/db.js";
 
-// Tambah anggota keluarga berdasarkan email
-// Tambah pendamping berdasarkan ID akun
+// Tambah anggota keluarga berdasarkan ID akun
 export const addFamily = async (familyId, patientId) => {
   const [users] = await db.execute(
     `
@@ -55,8 +54,7 @@ export const getFamilies = async (patientId) => {
       u.nama,
       u.email
     FROM family_connections fc
-    JOIN users u
-      ON fc.family_id = u.id
+    JOIN users u ON fc.family_id = u.id
     WHERE fc.patient_id = ?
     ORDER BY u.nama
     `,
@@ -78,8 +76,8 @@ export const deleteFamily = async (connectionId, patientId) => {
   );
 };
 
+// Ambil data pasien yang terhubung dengan pendamping
 export const getPatient = async (familyId) => {
-
   const [rows] = await db.execute(
     `
     SELECT
@@ -88,8 +86,7 @@ export const getPatient = async (familyId) => {
       u.email,
       u.nomor_hp
     FROM family_connections fc
-    JOIN users u
-      ON fc.patient_id = u.id
+    JOIN users u ON fc.patient_id = u.id
     WHERE fc.family_id = ?
     LIMIT 1
     `,
@@ -101,9 +98,9 @@ export const getPatient = async (familyId) => {
   }
 
   return rows[0];
-
 };
 
+// Cari akun pasien
 export const searchFamily = async (keyword, familyId) => {
   const search = `%${keyword.trim()}%`;
 
@@ -131,6 +128,44 @@ export const searchFamily = async (keyword, familyId) => {
     LIMIT 10
     `,
     [familyId, search, search]
+  );
+
+  return rows;
+};
+
+// Ambil riwayat Treatment Journey pasien untuk pendamping
+export const getPatientCheckins = async (familyId, patientId) => {
+  // Pastikan pasien terhubung dengan pendamping
+  const [connections] = await db.execute(
+    `
+    SELECT id
+    FROM family_connections
+    WHERE family_id = ?
+      AND patient_id = ?
+    `,
+    [familyId, patientId]
+  );
+
+  if (connections.length === 0) {
+    return null;
+  }
+
+  // Ambil riwayat check-in pasien
+  const [rows] = await db.execute(
+    `
+    SELECT
+      id,
+      DATE_FORMAT(checkin_date, '%Y-%m-%d') AS date,
+      condition_status AS \`condition\`,
+      complaints,
+      difficulty,
+      notes,
+      created_at AS createdAt
+    FROM daily_checkins
+    WHERE user_id = ?
+    ORDER BY checkin_date DESC
+    `,
+    [patientId]
   );
 
   return rows;

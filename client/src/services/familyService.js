@@ -31,3 +31,10 @@ export const getFamilyDashboard = async () => {
   const response = await api.get("/dashboard/family");
   return response.data;
 };
+
+export const getPatientJourney = async (patientId) => {
+  const response = await api.get(
+    `/family/patient/${patientId}/journey`
+  );
+  return response.data;
+};
