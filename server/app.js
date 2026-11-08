@@ -13,6 +13,7 @@ import recommendationRoutes from "./routes/recommendationRoutes.js";
 import familyRoutes from "./routes/familyRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import pushRoutes from "./routes/pushRoutes.js";
+import checkinRoutes from "./routes/checkinRoutes.js";
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.use("/api/recommendation", recommendationRoutes);
 app.use("/api/family", familyRoutes);
 app.use("/api/notification", notificationRoutes);
 app.use("/api/push", pushRoutes);
+app.use("/api/checkins", checkinRoutes);
 
 app.get("/api/health", (req, res) => {
     res.json({

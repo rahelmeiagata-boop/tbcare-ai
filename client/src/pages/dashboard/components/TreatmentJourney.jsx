@@ -7,35 +7,32 @@ import {
     MessageCircle,
     TrendingUp,
 } from "lucide-react";
-
-const CHECKIN_KEY = "tbcare_daily_checkins";
+import api from "../../../services/api";
 
 const TreatmentJourney = () => {
     const [checkins, setCheckins] = useState([]);
 
     useEffect(() => {
-        try {
-            const saved = localStorage.getItem(CHECKIN_KEY);
+        const fetchCheckins = async () => {
+            try {
+                const response = await api.get("/checkins");
+                const data = response.data.data || [];
 
-            if (saved) {
-                const data = JSON.parse(saved);
-
-                if (Array.isArray(data)) {
-                    setCheckins(
-                        [...data].sort(
-                            (a, b) =>
-                                new Date(b.createdAt) -
-                                new Date(a.createdAt)
-                        )
-                    );
-                }
+                setCheckins(
+                    [...data].sort(
+                        (a, b) =>
+                            new Date(b.date) - new Date(a.date)
+                    )
+                );
+            } catch (error) {
+                console.error(
+                    "Gagal mengambil riwayat check-in:",
+                    error
+                );
             }
-        } catch (error) {
-            console.error(
-                "Gagal membaca riwayat check-in:",
-                error
-            );
-        }
+        };
+
+        fetchCheckins();
     }, []);
 
     const totalCheckins = checkins.length;
@@ -53,8 +50,8 @@ const TreatmentJourney = () => {
     const consistency =
         totalCheckins > 0
             ? Math.round(
-                  (goodDays / totalCheckins) * 100
-              )
+                (goodDays / totalCheckins) * 100
+            )
             : 0;
 
     return (
@@ -243,9 +240,7 @@ const TreatmentJourney = () => {
 
                         {checkins.map((item, index) => {
 
-                            const date = new Date(
-                                item.createdAt
-                            );
+                            const date = new Date(`${item.date}T00:00:00`);
 
                             return (
                                 <div
@@ -255,8 +250,8 @@ const TreatmentJourney = () => {
 
                                     {index !==
                                         checkins.length - 1 && (
-                                        <div className="absolute left-[15px] top-8 bottom-[-20px] w-px bg-gray-200" />
-                                    )}
+                                            <div className="absolute left-[15px] top-8 bottom-[-20px] w-px bg-gray-200" />
+                                        )}
 
                                     <div className="relative z-10 w-8 h-8 rounded-full bg-blue-50 border-4 border-white flex items-center justify-center shrink-0">
                                         <div className="w-2 h-2 rounded-full bg-blue-600" />

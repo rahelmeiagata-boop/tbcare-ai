@@ -5,8 +5,8 @@ import {
     MessageCircle,
     Save,
 } from "lucide-react";
+import api from "../../../services/api";
 
-const CHECKIN_KEY = "tbcare_daily_checkins";
 
 const CheckInContent = ({ onComplete }) => {
     const [condition, setCondition] = useState("");
@@ -17,29 +17,41 @@ const CheckInContent = ({ onComplete }) => {
     const [saved, setSaved] = useState(false);
     const [alreadySaved, setAlreadySaved] = useState(false);
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = (() => {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+
+        return `${year}-${month}-${day}`;
+    })();
 
     useEffect(() => {
-        try {
-            const savedData = localStorage.getItem(CHECKIN_KEY);
+        const fetchTodayCheckin = async () => {
+            try {
+                const response = await api.get("/checkins");
+                const checkins = response.data.data || [];
 
-            if (!savedData) return;
+                const todayCheckin = checkins.find(
+                    (item) => String(item.date).slice(0, 10) === today
+                );
 
-            const checkins = JSON.parse(savedData);
-
-            const todayCheckin = checkins.find(
-                (item) => item.date === today
-            );
-
-            if (todayCheckin) {
-                setAlreadySaved(true);
+                if (todayCheckin) {
+                    setAlreadySaved(true);
+                    setCondition(todayCheckin.condition || "");
+                    setComplaints(todayCheckin.complaints || "");
+                    setDifficulty(todayCheckin.difficulty || "");
+                    setNotes(todayCheckin.notes || "");
+                }
+            } catch (error) {
+                console.error("Gagal mengambil check-in:", error);
             }
-        } catch (error) {
-            console.error("Gagal membaca check-in:", error);
-        }
+        };
+
+        fetchTodayCheckin();
     }, [today]);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!condition) {
@@ -48,64 +60,33 @@ const CheckInContent = ({ onComplete }) => {
         }
 
         try {
-            const savedData =
-                localStorage.getItem(CHECKIN_KEY);
-
-            const checkins = savedData
-                ? JSON.parse(savedData)
-                : [];
-
-            const newCheckin = {
-                id: Date.now(),
+            await api.post("/checkins", {
                 date: today,
                 condition,
                 complaints,
                 difficulty,
                 notes,
-                createdAt: new Date().toISOString(),
-            };
-
-            // Kalau hari ini sudah pernah check-in,
-            // update data hari ini.
-            const existingIndex = checkins.findIndex(
-                (item) => item.date === today
-            );
-
-            if (existingIndex !== -1) {
-                checkins[existingIndex] = newCheckin;
-            } else {
-                checkins.push(newCheckin);
-            }
-
-            localStorage.setItem(
-                CHECKIN_KEY,
-                JSON.stringify(checkins)
-            );
+            });
 
             setSaved(true);
             setAlreadySaved(true);
 
             setTimeout(() => {
-                if (onComplete) {
-                    onComplete();
-                }
+                if (onComplete) onComplete();
             }, 800);
 
             setTimeout(() => {
                 setSaved(false);
             }, 3000);
         } catch (error) {
-            console.error(
-                "Gagal menyimpan check-in:",
-                error
-            );
+            console.error("Gagal menyimpan check-in:", error);
 
             alert(
+                error.response?.data?.message ||
                 "Check-in gagal disimpan. Silakan coba lagi."
             );
         }
     };
-
     return (
         <div className="max-w-4xl mx-auto">
 
@@ -213,8 +194,8 @@ const CheckInContent = ({ onComplete }) => {
                                     setCondition(item.value)
                                 }
                                 className={`text-left rounded-2xl border p-4 transition-all ${condition === item.value
-                                        ? "border-blue-500 bg-blue-50 ring-2 ring-blue-100"
-                                        : "border-gray-200 bg-white hover:border-blue-200 hover:bg-gray-50"
+                                    ? "border-blue-500 bg-blue-50 ring-2 ring-blue-100"
+                                    : "border-gray-200 bg-white hover:border-blue-200 hover:bg-gray-50"
                                     }`}
                             >
                                 <div className="text-2xl mb-2">
@@ -282,8 +263,8 @@ const CheckInContent = ({ onComplete }) => {
                             <label
                                 key={item}
                                 className={`flex items-center gap-3 rounded-xl border px-4 py-3 cursor-pointer transition-all ${difficulty === item
-                                        ? "border-blue-400 bg-blue-50"
-                                        : "border-gray-200 hover:bg-gray-50"
+                                    ? "border-blue-400 bg-blue-50"
+                                    : "border-gray-200 hover:bg-gray-50"
                                     }`}
                             >
                                 <input
