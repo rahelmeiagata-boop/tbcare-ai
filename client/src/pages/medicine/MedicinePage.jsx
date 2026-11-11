@@ -32,6 +32,7 @@ const MedicinePage = () => {
       {medications.length === 0 ? (
         <p>Belum ada obat.</p>
       ) : (
+        <div style={{ overflowX: "auto" }}>
         <table border="1" cellPadding="10">
           <thead>
             <tr>
@@ -51,6 +52,7 @@ const MedicinePage = () => {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );

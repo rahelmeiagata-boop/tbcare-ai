@@ -40,7 +40,7 @@ const SettingsContent = () => {
 
     return (
         <div
-            className="w-full min-h-full bg-slate-100 px-8 pb-10"
+            className="w-full min-h-full bg-slate-100 px-0 sm:px-4 lg:px-8 pb-10"
             style={{ fontFamily: "'Poppins', sans-serif" }}
         >
             <style>
@@ -51,8 +51,8 @@ const SettingsContent = () => {
 
             <div className="max-w-5xl mx-auto space-y-5">
 
-                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-7 transition-all duration-200 hover:shadow-md">
-                    <div className="flex items-center justify-between gap-5">
+                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 sm:p-7 transition-all duration-200 hover:shadow-md">
+                    <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
                         <div className="flex items-start gap-4">
                             <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0">
                                 <UserRound
@@ -103,8 +103,8 @@ const SettingsContent = () => {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-7 transition-all duration-200 hover:shadow-md">
-                    <div className="flex items-center justify-between gap-5">
+                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 sm:p-7 transition-all duration-200 hover:shadow-md">
+                    <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
                         <div className="flex items-start gap-4">
                             <div className="w-12 h-12 rounded-2xl bg-teal-50 flex items-center justify-center shrink-0">
                                 <Bell
@@ -146,8 +146,8 @@ const SettingsContent = () => {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-7 transition-all duration-200 hover:shadow-md">
-                    <div className="flex items-center justify-between gap-5">
+                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 sm:p-7 transition-all duration-200 hover:shadow-md">
+                    <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
                         <div className="flex items-start gap-4">
                             <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center shrink-0">
                                 <Clock3
@@ -189,8 +189,8 @@ const SettingsContent = () => {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-7 transition-all duration-200 hover:shadow-md">
-                    <div className="flex items-center justify-between gap-5">
+                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 sm:p-7 transition-all duration-200 hover:shadow-md">
+                    <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
                         <div className="flex items-start gap-4">
                             <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center shrink-0">
                                 <LogOut

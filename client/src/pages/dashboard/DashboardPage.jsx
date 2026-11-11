@@ -8,7 +8,7 @@ import SettingsContent from "./components/SettingsContent";
 import TreatmentJourney from "./components/TreatmentJourney";
 
 import { useState, useEffect, useRef } from "react";
-import { Home, PlusCircle, Camera, Users, MessageSquare, Settings, BellPlus, HeartPulse, ClipboardCheck, TrendingUp } from "lucide-react";
+import { Home, PlusCircle, Camera, Users, MessageSquare, Settings, BellPlus, HeartPulse, ClipboardCheck, TrendingUp, Menu as MenuIcon, X as CloseIcon } from "lucide-react";
 import { getDashboard } from "../../services/dashboardService";
 import { getMedications } from "../../services/medicationService";
 import { createLog } from "../../services/logService";
@@ -130,6 +130,7 @@ export default function DashboardPage() {
 
     const [activeTab, setActiveTab] =
         useState("Dashboard");
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [sisaObat, setSisaObat] =
         useState(0);
     const [daftarObat, setDaftarObat] =
@@ -619,7 +620,14 @@ export default function DashboardPage() {
                     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
                 `}
             </style>
-            <aside className="relative w-72 shrink-0 overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 px-5 py-8 flex flex-col">
+            {sidebarOpen && (
+                <div
+                    className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+                    onClick={() => setSidebarOpen(false)}
+                    aria-hidden="true"
+                />
+            )}
+            <aside className={`fixed inset-y-0 left-0 z-40 flex w-72 max-w-[85vw] shrink-0 flex-col overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 px-5 py-8 transition-[translate,visibility] duration-300 ease-in-out lg:relative lg:inset-auto lg:z-auto lg:max-w-none lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full max-lg:invisible"}`}>
                 <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-blue-400/30 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute top-40 -left-16 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
                 <div className="relative flex items-center gap-3 px-2 mb-10">
@@ -632,9 +640,17 @@ export default function DashboardPage() {
                     <span className="text-white text-xl font-bold tracking-wide">
                         TBCare
                     </span>
+                    <button
+                        type="button"
+                        onClick={() => setSidebarOpen(false)}
+                        aria-label="Tutup menu"
+                        className="ml-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 lg:hidden"
+                    >
+                        <CloseIcon className="h-5 w-5" />
+                    </button>
 
                 </div>
-                <nav className="relative flex flex-col gap-3">
+                <nav className="relative flex min-h-0 flex-col gap-3 max-lg:overflow-y-auto">
 
                     {MENU_ITEMS.map(
                         (item) => {
@@ -649,11 +665,10 @@ export default function DashboardPage() {
 
                                 <button
                                     key={item.id}
-                                    onClick={() =>
-                                        setActiveTab(
-                                            item.id
-                                        )
-                                    }
+                                    onClick={() => {
+                                        setActiveTab(item.id);
+                                        setSidebarOpen(false);
+                                    }}
                                     className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold text-sm text-white transition-all duration-200 ${isActive
                                         ? "bg-blue-400 shadow-lg"
                                         : "bg-white/10 hover:bg-white/20"
@@ -677,9 +692,17 @@ export default function DashboardPage() {
             </aside>
 
             <div className="flex-1 flex flex-col min-w-0">
-                <header className="flex items-center justify-between px-10 py-8">
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+                <header className="relative flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-4 sm:flex-nowrap sm:px-6 sm:py-6 lg:px-10 lg:py-8">
+                    <button
+                        type="button"
+                        onClick={() => setSidebarOpen(true)}
+                        aria-label="Buka menu"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm transition-shadow hover:shadow-md lg:hidden"
+                    >
+                        <MenuIcon className="h-5 w-5 text-gray-800" strokeWidth={2} />
+                    </button>
+                    <div className="order-last min-w-0 basis-full sm:order-none sm:basis-0 sm:flex-1">
+                        <h1 className="text-xl font-extrabold text-gray-900 tracking-tight sm:text-2xl lg:text-3xl">
                             {activeTab ===
                                 "Dashboard"
                                 ? `${getGreeting()}, ${namaUser}! 👋`
@@ -694,8 +717,8 @@ export default function DashboardPage() {
                         </p>
 
                     </div>
-                    <div className="flex items-center gap-5">
-                        <div className="relative">
+                    <div className="ml-auto flex shrink-0 items-center gap-3 sm:gap-5">
+                        <div className="sm:relative">
 
                             <button
                                 onClick={() =>
@@ -743,7 +766,7 @@ export default function DashboardPage() {
 
                             {showNotifications && (
 
-                                <div className="absolute right-0 top-14 z-50 w-80 rounded-2xl bg-white shadow-xl border border-gray-200 overflow-hidden">
+                                <div className="absolute left-4 right-4 top-[4.25rem] z-50 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl sm:left-auto sm:right-0 sm:top-14 sm:w-80">
                                     <div className="px-5 py-4 border-b">
 
                                         <h3 className="font-bold text-gray-900">
@@ -880,7 +903,7 @@ export default function DashboardPage() {
                             )}
 
 
-                            <span className="font-semibold text-gray-800 text-sm">
+                            <span className="font-semibold text-gray-800 text-sm max-sm:max-w-[6.5rem] max-sm:truncate">
 
                                 {
                                     profile.nama
@@ -894,7 +917,7 @@ export default function DashboardPage() {
 
                 </header>
 
-                <main className="flex-1 px-10 pb-10">
+                <main className="flex-1 px-4 pb-8 sm:px-6 sm:pb-10 lg:px-10">
                     {activeTab ===
                         "Dashboard" ? (
 
@@ -958,8 +981,8 @@ export default function DashboardPage() {
                     ) : null}
                     {showScheduleModal && (
 
-                        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-                            <div className="bg-white w-[800px] max-h-[80vh] rounded-3xl shadow-xl p-6 overflow-y-auto">
+                        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+                            <div className="bg-white w-full max-w-[800px] max-h-[85dvh] rounded-3xl shadow-xl p-4 sm:p-6 overflow-y-auto">
                                 <div className="flex justify-between items-center mb-6">
 
                                     <h2 className="text-2xl font-bold">
@@ -993,7 +1016,7 @@ export default function DashboardPage() {
                                                     .value
                                             )
                                         }
-                                        className="border rounded-xl px-4 py-2 flex-1 outline-none focus:ring-2 focus:ring-teal-500"
+                                        className="border rounded-xl px-4 py-2 min-w-0 flex-1 outline-none focus:ring-2 focus:ring-teal-500"
                                     />
 
 
@@ -1029,6 +1052,7 @@ export default function DashboardPage() {
 
                                 </div>
 
+                                <div className="overflow-x-auto">
                                 <table className="w-full">
 
                                     <thead>
@@ -1111,6 +1135,7 @@ export default function DashboardPage() {
                                     </tbody>
 
                                 </table>
+                                </div>
 
                             </div>
                         </div>

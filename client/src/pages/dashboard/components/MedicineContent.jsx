@@ -269,8 +269,8 @@ const MedicineContent = () => {
 
     return (
         <div className="w-full font-['Poppins']">
-            <div className="w-full max-w-[1280px] mx-auto px-6 lg:px-8 pb-10">
-                <div className="flex items-center justify-between mb-6">
+            <div className="w-full max-w-[1280px] mx-auto px-0 sm:px-6 lg:px-8 pb-10">
+                <div className="flex items-center justify-between gap-3 mb-6">
                     <div>
                         <h2 className="text-2xl font-bold text-[#101828]">
                             Daftar Obat
@@ -286,8 +286,8 @@ const MedicineContent = () => {
                             type="button"
                             onClick={openAddModal}
                             className="
-                                hidden
-                                sm:inline-flex
+                                inline-flex
+                                shrink-0
                                 items-center
                                 gap-2
                                 px-5
@@ -392,7 +392,7 @@ const MedicineContent = () => {
                         <div
                             className="
                                 hidden
-                                md:block
+                                xl:block
                                 bg-white
                                 rounded-2xl
                                 border
@@ -538,7 +538,7 @@ const MedicineContent = () => {
                             </div>
                         </div>
 
-                        <div className="md:hidden space-y-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 xl:hidden">
                             {medications.map((item) => (
                                 <div
                                     key={item.id}

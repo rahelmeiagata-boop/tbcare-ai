@@ -163,7 +163,7 @@ const DashboardContent = ({
             <div className="grid grid-cols-12 gap-6 items-start">
 
                 {/* JADWAL HARI INI */}
-                <div className="col-span-12 lg:col-span-7 bg-white rounded-3xl shadow-sm border border-gray-100 p-7 flex flex-col self-start">
+                <div className="col-span-12 2xl:col-span-7 bg-white rounded-3xl shadow-sm border border-gray-100 p-5 sm:p-7 flex flex-col self-start">
 
                     <div>
                         <h2 className="text-xl font-bold text-gray-900">
@@ -197,17 +197,17 @@ const DashboardContent = ({
                                             : ""
                                             }`}
                                     >
-                                        <div className="w-20 shrink-0 px-4 py-3.5 border-r border-gray-200 text-gray-700 font-medium flex items-center">
+                                        <div className="w-14 sm:w-20 shrink-0 px-2 sm:px-4 py-3.5 border-r border-gray-200 text-gray-700 font-medium flex items-center">
                                             {item.waktu}
                                         </div>
 
-                                        <div className="flex-1 min-w-0 px-4 py-3.5 border-r border-gray-200 text-gray-700 font-medium flex items-center">
+                                        <div className="flex-1 min-w-0 px-2 sm:px-4 py-3.5 border-r border-gray-200 text-gray-700 font-medium flex items-center">
                                             <span className="truncate">
                                                 {item.namaObat}
                                             </span>
                                         </div>
 
-                                        <div className="w-36 shrink-0 px-4 py-3.5 flex items-center justify-center">
+                                        <div className="w-24 sm:w-36 shrink-0 px-2 sm:px-3 py-3.5 flex items-center justify-center text-center leading-tight sm:leading-normal sm:whitespace-nowrap">
 
                                             {item.status === "Belum Minum" ? (
                                                 <button
@@ -257,7 +257,7 @@ const DashboardContent = ({
                 </div>
 
                 {/* PROGRES TERAPI */}
-                <div className="col-span-6 lg:col-span-2 bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex flex-col">
+                <div className="col-span-12 sm:col-span-6 lg:col-span-5 2xl:col-span-2 bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex flex-col">
 
                     <h2 className="text-base font-bold text-gray-900 mb-4">
                         Progres Terapi
@@ -304,7 +304,7 @@ const DashboardContent = ({
                 </div>
 
                 {/* BADGE + SISA OBAT */}
-                <div className="col-span-6 lg:col-span-3 flex flex-col gap-6">
+                <div className="col-span-12 sm:col-span-6 lg:col-span-7 2xl:col-span-3 flex flex-col gap-6">
 
                     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex flex-col items-center flex-1">
 
@@ -514,7 +514,7 @@ const DashboardContent = ({
             ========================== */}
             <div className="grid grid-cols-12 gap-6 mt-6">
 
-                <div className="col-span-12 lg:col-span-8 bg-slate-50 rounded-3xl shadow-sm border border-gray-100 p-7">
+                <div className="col-span-12 xl:col-span-8 bg-slate-50 rounded-3xl shadow-sm border border-gray-100 p-5 sm:p-7">
 
                     <h2 className="text-xl font-bold text-gray-900 mb-6">
                         Quick Action
@@ -556,7 +556,7 @@ const DashboardContent = ({
 
 
                 {/* WHATSAPP */}
-                <div className="col-span-12 lg:col-span-4 flex items-end">
+                <div className="col-span-12 xl:col-span-4 flex items-end">
 
                     <div className="w-full bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex items-start gap-4">
 
