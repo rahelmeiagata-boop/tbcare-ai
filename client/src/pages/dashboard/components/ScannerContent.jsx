@@ -1,14 +1,41 @@
 import { useEffect, useRef, useState } from "react";
-import { Camera, Upload, ScanLine, FileText, RotateCcw, X, CheckCircle2, Image as ImageIcon } from "lucide-react";
+import toast from "react-hot-toast";
+import { Camera, Upload, ScanLine, FileText, RotateCcw, X, Image as ImageIcon, Loader2, AlertTriangle } from "lucide-react";
 
-const ScannerContent = () => {
+import ScanResult from "./ScanResult";
+import { confirmScan, getScannerStatus, scanPrescription } from "../../../services/scannerService";
+import { resizeImageToBlob } from "../../../utils/imageUtils";
+
+// Pesan galat yang ramah untuk pengguna.
+const readApiError = (err, fallback) => {
+    if (err.code === "ECONNABORTED") return "Pemindaian memakan waktu terlalu lama. Silakan coba lagi.";
+    if (err.response?.status === 413) return "Ukuran gambar terlalu besar. Coba foto dengan resolusi lebih rendah.";
+    if (!err.response && err.message === "Network Error") {
+        return "Tidak dapat terhubung ke server. Periksa koneksi internet Anda.";
+    }
+    return err.response?.data?.message || err.message || fallback;
+};
+
+// onSaved dipanggil setelah obat berhasil disimpan (mis. untuk pindah ke tab Obat Saya).
+const ScannerContent = ({ onSaved }) => {
     const [mode, setMode] = useState("upload");
     const [image, setImage] = useState(null);
-    const [scanned, setScanned] = useState(false);
+    const [scanning, setScanning] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [result, setResult] = useState(null);
+    const [resultKey, setResultKey] = useState(0);
+    const [scanError, setScanError] = useState(null);
+    const [serviceAvailable, setServiceAvailable] = useState(true);
     const [cameraActive, setCameraActive] = useState(false);
     const videoRef = useRef(null);
     const streamRef = useRef(null);
     const objectUrlRef = useRef(null);
+
+    const clearScan = () => {
+        setResult(null);
+        setScanError(null);
+    };
+
     const handleImageChange = (e) => {
         const file = e.target.files?.[0];
 
@@ -20,7 +47,7 @@ const ScannerContent = () => {
         const imageUrl = URL.createObjectURL(file);
         objectUrlRef.current = imageUrl;
         setImage(imageUrl);
-        setScanned(false);
+        clearScan();
     };
 
     const startCamera = async () => {
@@ -39,7 +66,7 @@ const ScannerContent = () => {
             streamRef.current = stream;
             setCameraActive(true);
             setImage(null);
-            setScanned(false);
+            clearScan();
         } catch (error) {
             console.error("Camera error:", error);
 
@@ -82,7 +109,7 @@ const ScannerContent = () => {
 
         const photo = canvas.toDataURL("image/jpeg", 0.9);
         setImage(photo);
-        setScanned(false);
+        clearScan();
         stopCamera();
     };
 
@@ -95,7 +122,7 @@ const ScannerContent = () => {
         }
         setMode(newMode);
         setImage(null);
-        setScanned(false);
+        clearScan();
     };
 
     const resetImage = () => {
@@ -105,14 +132,71 @@ const ScannerContent = () => {
         }
 
         setImage(null);
-        setScanned(false);
+        clearScan();
     };
 
-    const handleScan = () => {
-        if (!image) return;
+    const handleScan = async () => {
+        if (!image || scanning) return;
 
-        setScanned(true);
+        setScanning(true);
+        clearScan();
+
+        try {
+            // Foto diperkecil di browser dulu agar upload cepat dan muat di batas server.
+            const blob = await resizeImageToBlob(image);
+            const response = await scanPrescription(blob);
+
+            setResult(response.data);
+            setResultKey((key) => key + 1);
+        } catch (err) {
+            console.error("Scan resep gagal:", err);
+            setScanError(readApiError(err, "Resep gagal dipindai. Silakan coba lagi."));
+        } finally {
+            setScanning(false);
+        }
     };
+
+    const handleSave = async (medications) => {
+        if (saving) return;
+
+        setSaving(true);
+
+        try {
+            const response = await confirmScan({
+                scanId: result?.scan_id ?? null,
+                medications,
+            });
+
+            const failed = response?.data?.failed?.length ?? 0;
+            toast.success(response.message || "Obat berhasil disimpan.");
+            if (failed > 0) {
+                toast.error(`${failed} obat gagal disimpan. Tambahkan manual di menu Obat Saya.`);
+            }
+
+            resetImage();
+            onSaved?.();
+        } catch (err) {
+            toast.error(readApiError(err, "Obat gagal disimpan. Silakan coba lagi."));
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    useEffect(() => {
+        let active = true;
+
+        getScannerStatus()
+            .then((response) => {
+                if (active) setServiceAvailable(response?.data?.available !== false);
+            })
+            .catch(() => {
+                // Gagal cek status (mis. token kedaluwarsa) bukan berarti layanan mati.
+            });
+
+        return () => {
+            active = false;
+        };
+    }, []);
 
     useEffect(() => {
         if (
@@ -151,6 +235,19 @@ const ScannerContent = () => {
                 fontFamily: "'Poppins', sans-serif",
             }}
         >
+            {!serviceAvailable && (
+                <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-100">
+                    <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                        <p className="text-sm font-semibold text-amber-800">Layanan scan sedang tidak tersedia</p>
+                        <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+                            Anda masih bisa mencoba, tetapi pemindaian kemungkinan gagal. Coba lagi nanti atau
+                            tambahkan obat secara manual di menu Obat Saya.
+                        </p>
+                    </div>
+                </div>
+            )}
+
             <div className="bg-white rounded-3xl p-2 shadow-sm border border-gray-100 flex gap-2 transition-all duration-300">
                 <button
                     onClick={() => handleModeChange("upload")}
@@ -489,10 +586,11 @@ const ScannerContent = () => {
 
                     <button
                         onClick={handleScan}
-                        disabled={!image}
+                        disabled={!image || scanning}
                         className={`
                             w-full
                             mt-4
+                            ${scanning ? "opacity-70 cursor-wait" : ""}
                             flex
                             items-center
                             justify-center
@@ -525,9 +623,13 @@ const ScannerContent = () => {
                             }
                         `}
                     >
-                        <ScanLine className="w-5 h-5" />
+                        {scanning ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                            <ScanLine className="w-5 h-5" />
+                        )}
 
-                        Scan Resep
+                        {scanning ? "Memproses..." : "Scan Resep"}
                     </button>
                 </div>
 
@@ -548,7 +650,50 @@ const ScannerContent = () => {
                         </div>
                     </div>
 
-                    {!scanned ? (
+                    {scanning ? (
+                        <div className="h-72 flex flex-col items-center justify-center text-center">
+                            <Loader2 className="w-10 h-10 text-teal-500 animate-spin" />
+
+                            <p className="font-medium text-gray-600 mt-4">
+                                Memproses gambar dan membaca teks resep...
+                            </p>
+
+                            <p className="text-sm text-gray-400 mt-1 max-w-xs">
+                                Biasanya 2-10 detik. Jika layanan baru aktif, bisa sedikit lebih lama.
+                            </p>
+                        </div>
+                    ) : scanError ? (
+                        <div className="mt-6 p-5 rounded-2xl bg-red-50 border border-red-100">
+                            <div className="flex items-start gap-3">
+                                <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+
+                                <div>
+                                    <p className="font-semibold text-red-700">
+                                        Resep belum dapat dipindai
+                                    </p>
+
+                                    <p className="text-sm text-red-600/90 mt-1 leading-relaxed">
+                                        {scanError}
+                                    </p>
+
+                                    <button
+                                        type="button"
+                                        onClick={handleScan}
+                                        className="mt-3 text-sm font-semibold text-red-700 underline underline-offset-2 hover:text-red-800"
+                                    >
+                                        Coba lagi
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ) : result ? (
+                        <ScanResult
+                            key={resultKey}
+                            result={result}
+                            saving={saving}
+                            onSave={handleSave}
+                        />
+                    ) : (
                         <div className="h-72 flex flex-col items-center justify-center text-center">
                             <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center mb-4">
                                 <FileText className="w-7 h-7 text-gray-300" />
@@ -562,102 +707,6 @@ const ScannerContent = () => {
                                 Upload atau ambil foto resep terlebih dahulu,
                                 kemudian tekan tombol Scan Resep.
                             </p>
-                        </div>
-                    ) : (
-                        <div className="mt-6 space-y-4 animate-[fadeIn_0.4s_ease-out]">
-                            <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100">
-                                <div className="flex items-start gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm shrink-0">
-                                        <CheckCircle2 className="w-5 h-5 text-blue-600" />
-                                    </div>
-
-                                    <div>
-                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                                            Status
-                                        </p>
-
-                                        <p className="font-semibold text-blue-700 mt-0.5">
-                                            Preview hasil scan
-                                        </p>
-
-                                        <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                                            Integrasi OCR sedang dalam tahap
-                                            pengembangan.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="border border-gray-100 rounded-2xl p-5 hover:bg-gray-50/70 transition-colors duration-200">
-                                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                                    Obat terdeteksi
-                                </p>
-
-                                <p className="font-semibold text-gray-800 mt-1">
-                                    Rifampicin
-                                </p>
-                            </div>
-
-                            {/* DOSIS */}
-                            <div className="border border-gray-100 rounded-2xl p-5 hover:bg-gray-50/70 transition-colors duration-200">
-                                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                                    Dosis
-                                </p>
-
-                                <p className="font-semibold text-gray-800 mt-1">
-                                    Sesuai resep dokter
-                                </p>
-                            </div>
-
-                            <div className="border border-gray-100 rounded-2xl p-5 hover:bg-gray-50/70 transition-colors duration-200">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                                            Confidence
-                                        </p>
-
-                                        <p className="font-semibold text-green-600 mt-1">
-                                            92%
-                                        </p>
-                                    </div>
-
-                                    <div className="w-12 h-12 rounded-full border-4 border-green-100 flex items-center justify-center">
-                                        <span className="text-xs font-bold text-green-600">
-                                            92
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button
-                                className="
-                                    w-full
-                                    flex
-                                    items-center
-                                    justify-center
-                                    gap-2
-                                    py-3.5
-                                    rounded-2xl
-                                    bg-gradient-to-r
-                                    from-teal-600
-                                    to-cyan-500
-                                    hover:from-teal-700
-                                    hover:to-cyan-600
-                                    text-white
-                                    font-semibold
-                                    shadow-md
-                                    shadow-teal-500/20
-                                    hover:shadow-lg
-                                    hover:shadow-teal-500/25
-                                    hover:-translate-y-0.5
-                                    transition-all
-                                    duration-300
-                                "
-                            >
-                                <CheckCircle2 className="w-5 h-5" />
-
-                                Gunakan Hasil Scan
-                            </button>
                         </div>
                     )}
                 </div>

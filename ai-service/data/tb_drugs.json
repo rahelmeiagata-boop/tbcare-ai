@@ -1,0 +1,126 @@
+{
+  "version": "1.0.0",
+  "description": "Dataset obat TBC untuk pencocokan hasil OCR resep. Nama kanonik disamakan dengan TB_MEDICINE_OPTIONS di aplikasi. Isi dataset ini perlu diverifikasi apoteker/dokter sebelum dipakai di luar keperluan akademik.",
+  "drugs": [
+    {
+      "name": "Rifampisin",
+      "category": "OAT lini 1",
+      "aliases": ["rifampicin", "rifampin", "rifampisine", "rifampicine", "rimactane", "rifadin", "rif"],
+      "typical_strengths_mg": [150, 300, 450, 600]
+    },
+    {
+      "name": "Isoniazid",
+      "category": "OAT lini 1",
+      "aliases": ["isoniazide", "isoniasid", "isoniazida", "isonicotinic hydrazide", "inh", "inah"],
+      "typical_strengths_mg": [100, 300]
+    },
+    {
+      "name": "Pirazinamid",
+      "category": "OAT lini 1",
+      "aliases": ["pirazinamide", "pyrazinamide", "pyrazinamid", "pirazinamida", "pza"],
+      "typical_strengths_mg": [400, 500]
+    },
+    {
+      "name": "Etambutol",
+      "category": "OAT lini 1",
+      "aliases": ["ethambutol", "etambutol hcl", "ethambutol hcl", "etambutolum", "myambutol", "emb"],
+      "typical_strengths_mg": [250, 400, 500]
+    },
+    {
+      "name": "Streptomisin",
+      "category": "OAT lini 1",
+      "aliases": ["streptomycin", "streptomicin", "streptomisin sulfat", "streptomycin sulfate"],
+      "typical_strengths_mg": null
+    },
+    {
+      "name": "KDT RHZE",
+      "category": "OAT lini 1 (kombinasi dosis tetap, fase intensif)",
+      "aliases": ["kdt rhze", "kdt hrze", "oat kdt rhze", "fdc rhze", "rhze", "hrze", "4fdc", "4-fdc", "4 fdc", "fdc 4", "rimstar"],
+      "typical_strengths_mg": null
+    },
+    {
+      "name": "KDT RH",
+      "category": "OAT lini 1 (kombinasi dosis tetap, fase lanjutan)",
+      "aliases": ["kdt rh", "kdt hr", "oat kdt rh", "fdc rh", "2fdc", "2-fdc", "2 fdc", "fdc 2", "rifinah", "rimactazid"],
+      "typical_strengths_mg": null
+    },
+    {
+      "name": "Levofloksasin",
+      "category": "OAT lini 2",
+      "aliases": ["levofloxacin", "levofloxasin", "levofloksasin hcl", "levofloxacin hcl", "lfx", "cravit"],
+      "typical_strengths_mg": [250, 500, 750]
+    },
+    {
+      "name": "Moksifloksasin",
+      "category": "OAT lini 2",
+      "aliases": ["moxifloxacin", "moxifloxasin", "moksifloxacin", "mfx", "avelox"],
+      "typical_strengths_mg": [400]
+    },
+    {
+      "name": "Bedakuilin",
+      "category": "OAT lini 2",
+      "aliases": ["bedaquiline", "bedakulin", "bedaquilin", "bdq", "sirturo"],
+      "typical_strengths_mg": null
+    },
+    {
+      "name": "Linezolid",
+      "category": "OAT lini 2",
+      "aliases": ["linezolide", "lzd", "zyvox"],
+      "typical_strengths_mg": null
+    },
+    {
+      "name": "Klofazimin",
+      "category": "OAT lini 2",
+      "aliases": ["clofazimine", "clofazimin", "klofazimine", "cfz", "lamprene"],
+      "typical_strengths_mg": null
+    },
+    {
+      "name": "Sikloserin",
+      "category": "OAT lini 2",
+      "aliases": ["cycloserine", "cycloserin", "sikloserine", "seromycin"],
+      "typical_strengths_mg": null
+    },
+    {
+      "name": "Etionamid",
+      "category": "OAT lini 2",
+      "aliases": ["ethionamide", "ethionamid", "etionamide", "eto", "trecator"],
+      "typical_strengths_mg": null
+    },
+    {
+      "name": "Protionamid",
+      "category": "OAT lini 2",
+      "aliases": ["prothionamide", "prothionamid", "protionamide", "pto"],
+      "typical_strengths_mg": null
+    },
+    {
+      "name": "Kanamisin",
+      "category": "OAT lini 2 (suntik)",
+      "aliases": ["kanamycin", "kanamicin", "kanamisin sulfat", "kanamycin sulfate"],
+      "typical_strengths_mg": null
+    },
+    {
+      "name": "Amikasin",
+      "category": "OAT lini 2 (suntik)",
+      "aliases": ["amikacin", "amikacine", "amikasin sulfat", "amikacin sulfate"],
+      "typical_strengths_mg": null
+    },
+    {
+      "name": "Kapreomisin",
+      "category": "OAT lini 2 (suntik)",
+      "aliases": ["capreomycin", "capreomisin", "kapreomycin", "kapreomisin sulfat"],
+      "typical_strengths_mg": null
+    },
+    {
+      "name": "Delamanid",
+      "category": "OAT lini 2",
+      "aliases": ["delamanide", "deltyba", "dlm"],
+      "typical_strengths_mg": null
+    },
+    {
+      "name": "Vitamin B6",
+      "category": "Pendukung",
+      "aliases": ["vit b6", "vit. b6", "vitamin b 6", "vit b 6", "piridoksin", "pyridoxine", "piridoxin", "pyridoxin", "piridoksin hcl", "b6"],
+      "typical_strengths_mg": null
+    }
+  ]
+}

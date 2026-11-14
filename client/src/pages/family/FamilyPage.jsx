@@ -61,7 +61,7 @@ const FamilyPage = () => {
         if (!selectedFamily) return;
 
         const yakin = window.confirm(
-            `Hubungkan akun ${selectedFamily.nama} (@${selectedFamily.username}) sebagai pendamping?`
+            `Hubungkan akun ${selectedFamily.nama} (${selectedFamily.email}) sebagai pendamping?`
         );
 
         if (!yakin) return;
@@ -204,9 +204,6 @@ const FamilyPage = () => {
                                 <p className="font-semibold text-gray-900">
                                     {family.nama}
                                 </p>
-                                <p className="text-sm text-blue-600">
-                                    @{family.username}
-                                </p>
                                 <p className="text-sm text-gray-500">
                                     {family.email}
                                 </p>
@@ -225,10 +222,10 @@ const FamilyPage = () => {
                             Nama: {selectedFamily.nama}
                         </p>
                         <p className="text-sm text-gray-700">
-                            Username: @{selectedFamily.username}
+                            Email: {selectedFamily.email}
                         </p>
                         <p className="text-sm text-gray-700">
-                            Email: {selectedFamily.email}
+                            Username: @{selectedFamily.username}
                         </p>
                         <p className="text-sm text-gray-700">
                             Tipe akun: {selectedFamily.role}

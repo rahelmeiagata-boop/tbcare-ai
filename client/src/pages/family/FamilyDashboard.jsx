@@ -812,9 +812,6 @@ export default function FamilyDashboard() {
                         {item.nama}
                       </p>
                       <p className="mt-1 text-sm text-slate-500">
-                        @{item.username}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-400">
                         {item.email}
                       </p>
                     </div>
@@ -850,8 +847,8 @@ export default function FamilyDashboard() {
 
               <div className="mt-3 space-y-2 text-sm text-slate-600">
                 <p>Nama: {selectedPatient.nama}</p>
-                <p>Username: {selectedPatient.username}</p>
                 <p>Email: {selectedPatient.email}</p>
+                <p>Username: {selectedPatient.username}</p>
                 <p>Tipe akun: {selectedPatient.role}</p>
               </div>
 
@@ -1075,9 +1072,17 @@ export default function FamilyDashboard() {
               </h2>
 
               <p className="mt-3 text-sm leading-6 text-slate-600">
-                Apakah kamu yakin ingin menghubungkan akun pasien{" "}
-                <strong>{selectedPatient.nama}</strong>?
+                Apakah kamu yakin ingin menghubungkan akun pasien berikut?
               </p>
+
+              <div className="mt-3 rounded-2xl bg-[#F4FAF8] px-4 py-3">
+                <p className="text-sm font-bold text-[#14233F]">
+                  {selectedPatient.nama}
+                </p>
+                <p className="text-sm text-slate-500">
+                  {selectedPatient.email}
+                </p>
+              </div>
 
               <div className="mt-6 flex gap-3">
                 <button

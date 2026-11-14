@@ -971,7 +971,11 @@ export default function DashboardPage() {
                         <FamilyPage />
                     ) : activeTab ===
                         "Scanning Resep AI" ? (
-                        <ScannerContent />
+                        <ScannerContent
+                            onSaved={() =>
+                                setActiveTab("Obat Saya")
+                            }
+                        />
                     ) : activeTab ===
                         "AI Treatment Companion" ? (
                         <ChatContent />
