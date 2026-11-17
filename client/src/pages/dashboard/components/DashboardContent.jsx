@@ -134,7 +134,6 @@ const DashboardContent = ({
     therapyProgress,
     therapyDay,
     streak,
-    sisaObat,
     daftarObat,
     jadwalHariIni,
     handleMinumObat,

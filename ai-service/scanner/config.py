@@ -5,6 +5,7 @@ Semua nilai dapat diubah lewat environment variable tanpa menyentuh kode.
 from __future__ import annotations
 
 import os
+import shutil
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,8 +22,30 @@ def _int(name: str, default: int) -> int:
 DRUG_DATASET_PATH = Path(os.getenv("DRUG_DATASET_PATH", BASE_DIR / "data" / "tb_drugs.json"))
 
 # --- Tesseract --------------------------------------------------------------
-# Windows contoh: C:\Program Files\Tesseract-OCR\tesseract.exe
-TESSERACT_CMD = os.getenv("TESSERACT_CMD", "").strip()
+def _find_tesseract() -> str:
+    """Tentukan perintah Tesseract.
+
+    1. TESSERACT_CMD bila diisi (selalu menang).
+    2. Kosong ("pakai PATH") bila `tesseract` sudah ada di PATH.
+    3. Lokasi instalasi umum Windows bila filenya ada di sana.
+    Mengembalikan "" bila tidak ketemu; pesan galat akan muncul saat OCR dipakai.
+    """
+    explicit = os.getenv("TESSERACT_CMD", "").strip()
+    if explicit:
+        return explicit
+    if shutil.which("tesseract"):
+        return ""
+    for candidate in (
+        r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+        r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+        os.path.expandvars(r"%LOCALAPPDATA%\Programs\Tesseract-OCR\tesseract.exe"),
+    ):
+        if os.path.isfile(candidate):
+            return candidate
+    return ""
+
+
+TESSERACT_CMD = _find_tesseract()
 # Bahasa yang diminta. Yang belum terpasang otomatis dilewati.
 TESSERACT_LANG = os.getenv("TESSERACT_LANG", "ind+eng")
 # Page segmentation mode: 6 = satu blok teks seragam (cocok untuk resep/form).

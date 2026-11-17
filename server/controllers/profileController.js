@@ -29,15 +29,11 @@ export const profile = async (req, res) => {
 
 export const update = async (req, res) => {
   try {
-    console.log("📥 DATA UPDATE PROFILE:", req.body);
-    console.log("👤 USER ID:", req.user.id);
 
     const result = await updateProfile(
       req.user.id,
       req.body
     );
-
-    console.log("✅ PROFILE UPDATED:", result);
 
     successResponse(
       res,

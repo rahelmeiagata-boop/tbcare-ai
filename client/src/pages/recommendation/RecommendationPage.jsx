@@ -13,15 +13,9 @@ const RecommendationPage = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchRecommendation();
-    }, []);
-
     const fetchRecommendation = async () => {
         try {
             const response = await getRecommendation();
-
-            console.log("DATA REKOMENDASI:", response.data);
 
             setData(response.data);
         } catch (err) {
@@ -31,6 +25,14 @@ const RecommendationPage = () => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        const load = async () => {
+            await fetchRecommendation();
+        };
+
+        load();
+    }, []);
 
     const handleSaveSchedule = async () => {
         try {

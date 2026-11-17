@@ -1,3 +1,8 @@
+-- CATATAN: berkas ini disinkronkan manual dengan kode server (query di server/services dan
+-- server/controllers) pada 2026-11-15. Basis awalnya hasil mysqldump yang sudah tertinggal.
+-- Untuk database lama yang dibuat dari versi berkas sebelumnya, jalankan
+-- database/migrations/001_sync_schema_with_code.sql (data tidak hilang).
+--
 -- MySQL dump 10.13  Distrib 8.0.46, for Win64 (x86_64)
 --
 -- Host: localhost    Database: tbcare_ai
@@ -31,7 +36,7 @@ CREATE TABLE `ai_predictions` (
   PRIMARY KEY (`id`),
   KEY `scan_id` (`scan_id`),
   CONSTRAINT `ai_predictions_ibfk_1` FOREIGN KEY (`scan_id`) REFERENCES `prescription_scans` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -49,7 +54,7 @@ CREATE TABLE `explanations` (
   PRIMARY KEY (`id`),
   KEY `prediction_id` (`prediction_id`),
   CONSTRAINT `explanations_ibfk_1` FOREIGN KEY (`prediction_id`) REFERENCES `ai_predictions` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -69,7 +74,7 @@ CREATE TABLE `family_connections` (
   KEY `family_id` (`family_id`),
   CONSTRAINT `family_connections_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `family_connections_ibfk_2` FOREIGN KEY (`family_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -82,10 +87,10 @@ DROP TABLE IF EXISTS `medication_logs`;
 CREATE TABLE `medication_logs` (
   `id` int NOT NULL AUTO_INCREMENT,
   `schedule_id` int DEFAULT NULL,
-  `user_id` int NOT NULL,
-  `medication_id` int NOT NULL,
-  `taken_at` datetime NOT NULL,
-  `status` enum('tepat_waktu','terlambat','terlewat') NOT NULL,
+  `user_id` int DEFAULT NULL,
+  `medication_id` int DEFAULT NULL,
+  `taken_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `status` enum('taken','late','missed') NOT NULL DEFAULT 'taken',
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   KEY `medication_id` (`medication_id`),
@@ -93,7 +98,7 @@ CREATE TABLE `medication_logs` (
   CONSTRAINT `medication_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `medication_logs_ibfk_2` FOREIGN KEY (`medication_id`) REFERENCES `medications` (`id`) ON DELETE CASCADE,
   CONSTRAINT `medication_logs_ibfk_3` FOREIGN KEY (`schedule_id`) REFERENCES `medication_schedules` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -113,7 +118,7 @@ CREATE TABLE `medication_schedules` (
   PRIMARY KEY (`id`),
   KEY `medication_id` (`medication_id`),
   CONSTRAINT `medication_schedules_ibfk_1` FOREIGN KEY (`medication_id`) REFERENCES `medications` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -132,10 +137,12 @@ CREATE TABLE `medications` (
   `duration_days` int DEFAULT NULL,
   `stock` int NOT NULL,
   `consumption_rule` varchar(255) DEFAULT NULL,
+  `consumption_schedule` text,
+  `start_date` date DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `medications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -148,15 +155,18 @@ DROP TABLE IF EXISTS `notifications`;
 CREATE TABLE `notifications` (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
+  `schedule_id` int DEFAULT NULL,
   `message` text NOT NULL,
-  `channel` enum('whatsapp','telegram') NOT NULL DEFAULT 'whatsapp',
+  `channel` enum('whatsapp','telegram','web_push') NOT NULL DEFAULT 'whatsapp',
   `status` enum('terkirim','gagal','menunggu') NOT NULL DEFAULT 'menunggu',
+  `is_read` tinyint(1) NOT NULL DEFAULT '0',
   `sent_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
+  KEY `schedule_id` (`schedule_id`),
   CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -176,7 +186,7 @@ CREATE TABLE `ocr_results` (
   PRIMARY KEY (`id`),
   KEY `scan_id` (`scan_id`),
   CONSTRAINT `ocr_results_ibfk_1` FOREIGN KEY (`scan_id`) REFERENCES `prescription_scans` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -195,7 +205,7 @@ CREATE TABLE `prescription_scans` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `prescription_scans_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -208,15 +218,15 @@ DROP TABLE IF EXISTS `user_routines`;
 CREATE TABLE `user_routines` (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
-  `wake_up` time DEFAULT NULL,
+  `wake_time` time DEFAULT NULL,
   `breakfast_time` time DEFAULT NULL,
   `lunch_time` time DEFAULT NULL,
   `dinner_time` time DEFAULT NULL,
   `sleep_time` time DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
+  UNIQUE KEY `user_id` (`user_id`),
   CONSTRAINT `user_routines_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -229,18 +239,64 @@ DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nama` varchar(100) NOT NULL,
+  `username` varchar(30) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `nomor_hp` varchar(20) NOT NULL,
   `tanggal_lahir` date DEFAULT NULL,
   `jenis_kelamin` enum('L','P') NOT NULL,
   `alamat` text,
+  `profile_photo` longtext,
   `role` enum('patient','family') NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `username` (`username`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+--
+-- Table structure for table `daily_checkins`
+--
+
+DROP TABLE IF EXISTS `daily_checkins`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `daily_checkins` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `checkin_date` date NOT NULL,
+  `condition_status` varchar(50) NOT NULL,
+  `complaints` text,
+  `difficulty` varchar(255) DEFAULT NULL,
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_checkin_date` (`user_id`,`checkin_date`),
+  CONSTRAINT `daily_checkins_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `push_subscriptions`
+--
+
+DROP TABLE IF EXISTS `push_subscriptions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `push_subscriptions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `endpoint` varchar(512) NOT NULL,
+  `p256dh` varchar(255) NOT NULL,
+  `auth` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `endpoint` (`endpoint`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `push_subscriptions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

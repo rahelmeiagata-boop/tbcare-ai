@@ -2,26 +2,19 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { UserRound, Bell, Clock3, LogOut, ChevronRight } from "lucide-react";
 
+import { enablePushNotification } from "../../../services/pushService";
+
 const SettingsContent = () => {
     const navigate = useNavigate();
 
     const handleNotification = async () => {
         try {
-            if (!("Notification" in window)) {
-                toast.error("Browser tidak mendukung notifikasi.");
-                return;
-            }
+            await enablePushNotification();
 
-            const permission = await Notification.requestPermission();
-
-            if (permission === "granted") {
-                toast.success("Notifikasi berhasil diaktifkan.");
-            } else {
-                toast.error("Izin notifikasi belum diberikan.");
-            }
+            toast.success("Notifikasi berhasil diaktifkan.");
         } catch (error) {
             console.error(error);
-            toast.error("Gagal mengaktifkan notifikasi.");
+            toast.error(error.message || "Gagal mengaktifkan notifikasi.");
         }
     };
 

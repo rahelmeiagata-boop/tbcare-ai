@@ -28,9 +28,11 @@ foto resep ─► image processing (OpenCV) ─► OCR (Tesseract) ─► parser
 ## Menjalankan
 
 ### 1. Pasang Tesseract
-- **Windows**: unduh installer dari <https://github.com/UB-Mannheim/tesseract/wiki>, centang bahasa
-  **Indonesian** saat instalasi. Lalu set `TESSERACT_CMD`, contoh
-  `set TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe`.
+- **Windows**: unduh installer dari <https://github.com/UB-Mannheim/tesseract/wiki>, buka
+  *Additional language data* dan **centang Indonesian**, biarkan lokasi bawaan
+  `C:\Program Files\Tesseract-OCR`. Lokasi itu (dan PATH) dicari otomatis, jadi tidak perlu
+  mengatur apa pun. Bila dipasang di tempat lain:
+  `setx TESSERACT_CMD "D:\alat\Tesseract-OCR\tesseract.exe"`, lalu buka terminal baru.
 - **Ubuntu/Debian**: `sudo apt install tesseract-ocr tesseract-ocr-ind tesseract-ocr-eng`
 - **macOS**: `brew install tesseract tesseract-lang`
 
@@ -40,11 +42,12 @@ Bila bahasa `ind` belum terpasang, layanan otomatis memakai `eng` (nama obat tet
 ```bash
 cd ai-service
 python -m venv .venv
-.venv\Scripts\activate          # Windows   (Linux/macOS: source .venv/bin/activate)
+.venv\Scripts\activate          # Windows PowerShell: .venv\Scripts\Activate.ps1 | Linux/macOS: source .venv/bin/activate
 pip install -r requirements.txt
 python app.py                   # http://127.0.0.1:8000
 ```
-Cek: <http://127.0.0.1:8000/health>
+Cek <http://127.0.0.1:8000/health>: `"status":"ok"` berarti Tesseract ditemukan.
+Panduan lengkap beserta pemecahan masalah ada di `README.md` utama proyek.
 
 ### 3. Uji tanpa server (cocok untuk demo ke dosen)
 ```bash
@@ -76,7 +79,7 @@ Kode galat: `missing_image`, `invalid_image`, `image_too_small`, `file_too_large
 | Variabel | Default | Keterangan |
 |---|---|---|
 | `PORT` / `HOST` | `8000` / `127.0.0.1` | Alamat server dev |
-| `TESSERACT_CMD` | – | Path `tesseract` bila tidak ada di PATH |
+| `TESSERACT_CMD` | otomatis | Dicari di PATH dan `C:\Program Files\Tesseract-OCR`; isi hanya bila di lokasi lain |
 | `TESSERACT_LANG` | `ind+eng` | Bahasa; yang belum terpasang dilewati |
 | `TESSERACT_PSM` | `6` | Page segmentation mode |
 | `OCR_VARIANTS` | `gray,binary` | Varian gambar untuk OCR (`gray` saja lebih cepat) |

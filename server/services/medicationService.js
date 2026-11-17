@@ -50,9 +50,10 @@ export const createMedication = async (userId, data) => {
       duration_days,
       stock,
       consumption_rule,
-      consumption_schedule
+      consumption_schedule,
+      start_date
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURDATE())`,
     [
       userId,
       med_name,
@@ -114,9 +115,6 @@ export const getAllMedications = async (userId) => {
   );
 
   return rows.map((item) => {
-
-    console.log(item.med_name);
-    console.log(item.consumption_schedule);
 
     return {
       ...item,
@@ -245,7 +243,6 @@ export const deleteMedication = async (id, userId) => {
 };
 
 export const takeMedicine = async (scheduleId) => {
-  console.log("TAKE MEDICINE:", scheduleId);
 
   // Simpan log
   await db.execute(
@@ -276,8 +273,6 @@ export const takeMedicine = async (scheduleId) => {
     [scheduleId]
   );
 
-  console.log("MEDICATION ROW:", rows);
-
   if (rows.length > 0) {
 
     await db.execute(
@@ -288,18 +283,5 @@ export const takeMedicine = async (scheduleId) => {
       `,
       [rows[0].medication_id]
     );
-
-    const [check] = await db.execute(
-      `
-    SELECT id, med_name, stock
-    FROM medications
-    WHERE id = ?
-    `,
-      [rows[0].medication_id]
-    );
-
-    console.log("SETELAH UPDATE:", check);
-
   }
-
 };

@@ -13,11 +13,8 @@ import {
 } from "../utils/response.js";
 
 export const create = async (req, res) => {
-  console.log("MASUK CONTROLLER");
-  console.log(req.body);
 
   try {
-    console.log(req.body);
 
     const result = await createMedication(
       req.user.id,
@@ -31,7 +28,7 @@ export const create = async (req, res) => {
       201
     );
   } catch (err) {
-    console.log(err);
+    console.error(err);
 
     errorResponse(res, err.message);
   }

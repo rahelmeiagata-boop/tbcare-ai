@@ -57,12 +57,7 @@ const calculateTherapyDay = (startDate) => {
 
 };
 
-console.log("DASHBOARD SERVICE BARU LOADED");
-
 export const getDashboardData = async (userId) => {
-
-  console.log("================================");
-  console.log("USER ID :", userId);
 
   // Jadwal obat
   const [todaySchedule] = await db.execute(
@@ -109,8 +104,6 @@ ms.scheduled_time ASC
     [userId]
   );
 
-  console.log("TODAY SCHEDULE :", todaySchedule);
-
   // Total stok obat
   const [stockData] = await db.execute(
     `
@@ -120,9 +113,6 @@ ms.scheduled_time ASC
   `,
     [userId]
   );
-
-  console.log("TOTAL STOCK :", stockData);
-  console.log("TOTAL STOCK :", stockData);
 
   // Total obat yang sudah diminum hari ini
   const [takenLogs] = await db.execute(
@@ -141,7 +131,6 @@ ms.scheduled_time ASC
     [userId]
   );
 
-  console.log("TAKEN LOGS :", takenLogs);
   // Riwayat kepatuhan konsumsi obat 7 hari terakhir
 const [dailyHistory] = await db.execute(
   `
@@ -178,10 +167,6 @@ const [dailyHistory] = await db.execute(
   [userId]
 );
 
-console.log("DAILY HISTORY :", dailyHistory);
-
-  console.log("DAILY HISTORY :", dailyHistory);
-
   // Semua hari pengguna berhasil minum obat
   const [streakRows] = await db.execute(
     `
@@ -199,11 +184,7 @@ console.log("DAILY HISTORY :", dailyHistory);
     [userId]
   );
 
-  console.log("STREAK DAYS :", streakRows);
-
   const streak = calculateStreak(streakRows);
-
-  console.log("STREAK :", streak);
 
   // Hari terapi
   const [therapyStart] = await db.execute(
@@ -218,10 +199,6 @@ console.log("DAILY HISTORY :", dailyHistory);
   const therapyDay = calculateTherapyDay(
     therapyStart[0].start_date
   );
-
-  console.log("THERAPY DAY :", therapyDay);
-
-  console.log("================================");
 
   const totalTaken = takenLogs[0].total;
   const totalStock = stockData[0].total_stock;

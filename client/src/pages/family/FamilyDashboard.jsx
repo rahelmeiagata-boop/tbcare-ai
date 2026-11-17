@@ -8,7 +8,6 @@ import {
   Info,
   Package,
   Pill,
-  TrendingUp,
 } from "lucide-react";
 import {
   getFamilyDashboard,
@@ -148,6 +147,7 @@ function MedicationScheduleCard({
   onReminder,
   onViewAll,
   reminderCooldowns,
+  currentTime,
 }) {
   return (
     <Card>
@@ -175,7 +175,7 @@ function MedicationScheduleCard({
             {schedule.slice(0, 5).map((item, index) => {
               const itemId = item.id ?? `${item.name}-${item.time}`;
               const isSent =
-                Date.now() < (reminderCooldowns?.[itemId] ?? 0);
+                currentTime < (reminderCooldowns?.[itemId] ?? 0);
 
               return (
                 <div
@@ -443,7 +443,7 @@ export default function FamilyDashboard() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("Semua");
   const [reminderCooldowns, setReminderCooldowns] = useState({});
-  const [currentTime, setCurrentTime] = useState(Date.now());
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [journey, setJourney] = useState([]);
 
   const [searchPatient, setSearchPatient] = useState("");
@@ -649,8 +649,6 @@ export default function FamilyDashboard() {
       );
     }
   };
-  const completed = Math.max(0, Number(dashboard?.therapy_day ?? 0));
-
   const streak = Math.max(
     0,
     Number(dashboard?.streak ?? dashboard?.streak_days ?? dashboard?.current_streak ?? 0)
@@ -872,6 +870,7 @@ export default function FamilyDashboard() {
               onReminder={handleReminder}
               onViewAll={() => setShowScheduleModal(true)}
               reminderCooldowns={reminderCooldowns}
+              currentTime={currentTime}
             />
           </div>
 

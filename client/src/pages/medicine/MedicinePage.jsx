@@ -5,10 +5,6 @@ const MedicinePage = () => {
   const [medications, setMedications] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchMedications();
-  }, []);
-
   const fetchMedications = async () => {
     try {
       const response = await getMedications();
@@ -20,6 +16,14 @@ const MedicinePage = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const load = async () => {
+      await fetchMedications();
+    };
+
+    load();
+  }, []);
 
   if (loading) {
     return <h2>Loading...</h2>;

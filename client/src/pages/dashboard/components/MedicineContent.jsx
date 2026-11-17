@@ -100,7 +100,11 @@ const MedicineContent = () => {
     };
 
     useEffect(() => {
-        fetchMedications();
+        const load = async () => {
+            await fetchMedications();
+        };
+
+        load();
     }, []);
 
     const resetForm = () => {

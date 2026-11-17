@@ -99,10 +99,6 @@ export const saveRecommendation = async (userId) => {
   const result = await generateRecommendation(userId);
 
   for (const med of result.medications) {
-    console.log("================================");
-    console.log("MED :", med.med_name);
-    console.log("MEDICATION ID :", med.id);
-    console.log("TIMES :", med.recommended_times);
 
     const [schedules] = await db.execute(
       `
@@ -113,8 +109,6 @@ export const saveRecommendation = async (userId) => {
       `,
       [med.id]
     );
-
-    console.log("SCHEDULES :", schedules);
 
     for (
       let i = 0;

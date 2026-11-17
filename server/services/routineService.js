@@ -66,8 +66,6 @@ export const saveRoutine = async (userId, data) => {
         sleep_time,
     } = data;
 
-    console.log("1. MASUK SERVICE");
-
     const sql = `
         INSERT INTO user_routines
         (
@@ -96,12 +94,7 @@ export const saveRoutine = async (userId, data) => {
         sleep_time,
     ];
 
-    console.log("2. SQL =", sql);
-    console.log("3. VALUES =", values);
-
     await db.execute(sql, values);
-
-    console.log("4. ROUTINE BERHASIL DISIMPAN");
 
     // Ambil routine terbaru
     const routine = await getRoutine(userId);
@@ -123,11 +116,6 @@ export const saveRoutine = async (userId, data) => {
         [userId]
     );
 
-    console.log(
-        "5. JUMLAH OBAT USER :",
-        medications.length
-    );
-
     // Buat schedule hanya untuk obat
     // yang belum punya schedule
     for (const medication of medications) {
@@ -141,9 +129,6 @@ export const saveRoutine = async (userId, data) => {
         );
 
         if (existingSchedules.length > 0) {
-            console.log(
-                `6. ${medication.med_name} sudah punya schedule. Skip.`
-            );
 
             continue;
         }
@@ -171,11 +156,6 @@ export const saveRoutine = async (userId, data) => {
             routine
         );
 
-        console.log(
-            `7. ${medication.med_name} ->`,
-            scheduleTimes
-        );
-
         for (const scheduledTime of scheduleTimes) {
             await db.execute(
                 `
@@ -194,13 +174,10 @@ export const saveRoutine = async (userId, data) => {
         }
     }
 
-    console.log("8. SEMUA SCHEDULE SELESAI DIPROSES");
-
     return getRoutine(userId);
 };
 
 export const getRoutine = async (userId) => {
-    console.log("9. MASUK GET ROUTINE");
 
     const [rows] = await db.execute(
         `
@@ -210,8 +187,6 @@ export const getRoutine = async (userId) => {
         `,
         [userId]
     );
-
-    console.log("10. HASIL SELECT =", rows);
 
     return rows[0];
 };

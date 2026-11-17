@@ -77,7 +77,7 @@ const checkMedicationSchedules = async () => {
 
       if (existing.length > 0) {
         console.log(
-          `⏭️ Notifikasi ${schedule.med_name} sudah pernah diproses hari ini.`
+          `⏭️ Notifikasi user ${schedule.user_id} sudah pernah diproses hari ini.`
         );
 
         continue;
@@ -124,11 +124,11 @@ const checkMedicationSchedules = async () => {
           pushSuccess = true;
 
           console.log(
-            `✅ PUSH NOTIF TERKIRIM: ${schedule.med_name} -> user ${schedule.user_id} -> subscription ${sub.id}`
+            `✅ PUSH NOTIF TERKIRIM: user ${schedule.user_id} -> subscription ${sub.id}`
           );
         } else {
           console.log(
-            `❌ PUSH NOTIF GAGAL: ${schedule.med_name} -> user ${schedule.user_id} -> subscription ${sub.id}`
+            `❌ PUSH NOTIF GAGAL: user ${schedule.user_id} -> subscription ${sub.id}`
           );
         }
       }
@@ -157,7 +157,7 @@ const checkMedicationSchedules = async () => {
         );
 
         console.log(
-          `🔔 NOTIF OTOMATIS SELESAI: ${schedule.med_name} -> user ${schedule.user_id}`
+          `🔔 NOTIF OTOMATIS SELESAI: user ${schedule.user_id}`
         );
 
       } else {

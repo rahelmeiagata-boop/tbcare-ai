@@ -417,9 +417,11 @@ export default function DashboardPage() {
 
 
     useEffect(() => {
+        const load = async () => {
+            await fetchDashboard();
+        };
 
-        fetchDashboard();
-
+        load();
     }, []);
 
     useEffect(() => {
@@ -496,17 +498,31 @@ export default function DashboardPage() {
             };
 
         if ("Notification" in window) {
+            // Setelah izin diberikan, perangkat ini harus berlangganan push dan
+            // tercatat di server; kalau tidak, pengingat tidak akan pernah terkirim.
+            const subscribe = () =>
+                enablePushNotification().catch((error) => {
+                    console.warn(
+                        "Push notification belum aktif:",
+                        error.message
+                    );
+                });
+
             if (
                 Notification.permission ===
                 "default"
             ) {
                 Notification.requestPermission()
                     .then((permission) => {
-                        console.log(
-                            "Notification permission:",
-                            permission
-                        );
+                        if (permission === "granted") {
+                            subscribe();
+                        }
                     });
+            } else if (
+                Notification.permission ===
+                "granted"
+            ) {
+                subscribe();
             }
         }
 

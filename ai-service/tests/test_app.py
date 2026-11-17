@@ -24,6 +24,23 @@ def sample_jpeg() -> bytes:
     return buf.tobytes()
 
 
+class RoutingTest(unittest.TestCase):
+    """Tidak butuh Tesseract."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.client = create_app().test_client()
+
+    def test_unknown_route_is_404_not_500(self):
+        # Browser otomatis meminta /favicon.ico; harus 404 biasa, bukan "kesalahan tak terduga".
+        response = self.client.get("/favicon.ico")
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get_json()["code"], "http_error")
+
+    def test_wrong_method_is_405(self):
+        self.assertEqual(self.client.get("/scan").status_code, 405)
+
+
 @unittest.skipUnless(_tesseract_ready(), "Tesseract belum terpasang")
 class AppTest(unittest.TestCase):
     @classmethod

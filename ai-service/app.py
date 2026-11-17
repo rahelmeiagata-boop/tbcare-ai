@@ -14,7 +14,7 @@ import logging
 import os
 
 from flask import Flask, jsonify, request
-from werkzeug.exceptions import RequestEntityTooLarge
+from werkzeug.exceptions import HTTPException, RequestEntityTooLarge
 
 from scanner import config
 from scanner.ocr import OcrUnavailable, available_languages, pick_language, tesseract_version
@@ -86,6 +86,8 @@ def create_app() -> Flask:
 
     @app.errorhandler(Exception)
     def handle_unexpected(exc: Exception):
+        if isinstance(exc, HTTPException):  # 404, 405, dll. dijawab apa adanya, bukan "kesalahan tak terduga"
+            return _error(exc.description or exc.name, exc.code or 500, "http_error")
         log.exception("kesalahan tak terduga saat scan")
         return _error("Terjadi kesalahan saat memproses gambar.", 500, "internal_error")
 

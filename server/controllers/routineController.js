@@ -11,10 +11,6 @@ import {
 export const save = async (req, res) => {
   try {
 
-    console.log("========== SAVE ROUTINE ==========");
-    console.log("REQ.USER =", req.user);
-    console.log("REQ.BODY =", req.body);
-
     const result = await saveRoutine(
       req.user.id,
       req.body
@@ -26,7 +22,7 @@ export const save = async (req, res) => {
       result
     );
   } catch (err) {
-    console.log("ERROR =", err);
+    console.error("Gagal menyimpan rutinitas:", err);
 
     errorResponse(res, err.message);
   }

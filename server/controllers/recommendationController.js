@@ -38,7 +38,7 @@ export const saveRecommendationController = async (req, res) => {
       "Jadwal berhasil disimpan."
     );
   } catch (err) {
-    console.log(err);
+    console.error(err);
 
     errorResponse(
       res,

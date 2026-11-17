@@ -5,6 +5,7 @@
 Backend TBCare memakai MySQL. `localhost` tidak bisa dipakai di Vercel.
 
 Buat database MySQL cloud, misalnya TiDB Cloud Serverless, lalu jalankan `database/schema.sql` pada database tersebut.
+Bila database sudah terlanjur dibuat dari versi lama `schema.sql`, jalankan `database/migrations/001_sync_schema_with_code.sql`.
 
 Isi environment variable backend:
 
