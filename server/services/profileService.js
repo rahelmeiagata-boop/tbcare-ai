@@ -24,13 +24,16 @@ export const getProfile = async (userId) => {
 export const updateProfile = async (userId, data) => {
   const {
     nama,
+    username,
     email,
+    password,
     nomor_hp,
     tanggal_lahir,
     jenis_kelamin,
     alamat,
-    profile_photo,
-  } = data;
+} = userData;
+
+const role = "patient";
 
   const tanggalLahirValue =
     tanggal_lahir && tanggal_lahir.trim() !== ""

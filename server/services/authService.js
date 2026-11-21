@@ -15,6 +15,7 @@
       alamat,
       role,
     } = userData;
+    const safeRole = role === "family" ? "family" : "patient";
 
     // Validasi username
     const cleanUsername = username?.trim().toLowerCase();
@@ -66,7 +67,7 @@
         tanggal_lahir,
         jenis_kelamin,
         alamat,
-        role,
+        safeRole,
       ]
     );
 
@@ -79,7 +80,7 @@
       tanggal_lahir,
       jenis_kelamin,
       alamat,
-      role,
+      role: safeRole,
     };
   };
 

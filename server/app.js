@@ -15,6 +15,8 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import pushRoutes from "./routes/pushRoutes.js";
 import checkinRoutes from "./routes/checkinRoutes.js";
 import scannerRoutes from "./routes/scannerRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
+import knowledgeRoutes from "./routes/knowledgeRoutes.js";
 
 dotenv.config();
 
@@ -38,6 +40,8 @@ app.use("/api/notification", notificationRoutes);
 app.use("/api/push", pushRoutes);
 app.use("/api/checkins", checkinRoutes);
 app.use("/api/scanner", scannerRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/knowledge", knowledgeRoutes);
 
 app.get("/api/health", (req, res) => {
     res.json({

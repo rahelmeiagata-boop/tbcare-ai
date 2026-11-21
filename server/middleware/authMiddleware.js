@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { errorResponse } from "../utils/response.js";
 import { MESSAGES } from "../constants/messages.js";
+import { ROLES } from "../constants/roles.js";
 
 export const authenticate = (req, res, next) => {
   try {
@@ -24,3 +25,19 @@ export const authenticate = (req, res, next) => {
     return errorResponse(res, MESSAGES.TOKEN_INVALID, 401);
   }
 };
+
+export const authorizeRole = (...allowedRoles) => {
+  return (req, res, next) => {
+    if (!req.user || !allowedRoles.includes(req.user.role)) {
+      return errorResponse(
+        res,
+        "Anda tidak memiliki akses ke fitur ini.",
+        403
+      );
+    }
+
+    next();
+  };
+};
+
+export const authorizeAdmin = authorizeRole(ROLES.ADMIN);

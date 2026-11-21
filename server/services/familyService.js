@@ -100,9 +100,17 @@ export const getPatient = async (familyId) => {
   return rows[0];
 };
 
+
 // Cari akun pasien
 export const searchFamily = async (keyword, familyId) => {
-  const search = `%${keyword.trim()}%`;
+  // Hilangkan spasi dan tanda @ di awal input
+  const normalizedKeyword = String(keyword || "")
+    .trim()
+    .replace(/^@+/, "");
+
+  if (!normalizedKeyword) return [];
+
+  const search = `%${normalizedKeyword}%`;
 
   const [rows] = await db.execute(
     `
@@ -132,6 +140,7 @@ export const searchFamily = async (keyword, familyId) => {
 
   return rows;
 };
+
 
 // Ambil riwayat Treatment Journey pasien untuk pendamping
 export const getPatientCheckins = async (familyId, patientId) => {

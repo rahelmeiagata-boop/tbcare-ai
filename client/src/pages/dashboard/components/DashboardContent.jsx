@@ -162,7 +162,7 @@ const DashboardContent = ({
             <div className="grid grid-cols-12 gap-6 items-start">
 
                 {/* JADWAL HARI INI */}
-                <div className="col-span-12 2xl:col-span-7 bg-white rounded-3xl shadow-sm border border-gray-100 p-5 sm:p-7 flex flex-col self-start">
+                <div className="col-span-12 lg:col-span-7 bg-white rounded-3xl shadow-sm border border-gray-100 p-5 sm:p-7 flex flex-col self-start">
 
                     <div>
                         <h2 className="text-xl font-bold text-gray-900">
@@ -256,7 +256,7 @@ const DashboardContent = ({
                 </div>
 
                 {/* PROGRES TERAPI */}
-                <div className="col-span-12 sm:col-span-6 lg:col-span-5 2xl:col-span-2 bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex flex-col">
+                <div className="col-span-12 sm:col-span-6 lg:col-span-2 bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex flex-col">
 
                     <h2 className="text-base font-bold text-gray-900 mb-4">
                         Progres Terapi
@@ -303,7 +303,7 @@ const DashboardContent = ({
                 </div>
 
                 {/* BADGE + SISA OBAT */}
-                <div className="col-span-12 sm:col-span-6 lg:col-span-7 2xl:col-span-3 flex flex-col gap-6">
+                <div className="col-span-12 sm:col-span-6 lg:col-span-3 flex flex-col gap-6">
 
                     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex flex-col items-center flex-1">
 

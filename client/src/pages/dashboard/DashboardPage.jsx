@@ -390,20 +390,18 @@ export default function DashboardPage() {
             }
 
             setJadwalHariIni(
-                (data.today_schedule || [])
-                    .map((item) => ({
-                        id: item.id,
-                        waktu:
-                            item.scheduled_time
-                                .slice(0, 5),
-                        namaObat:
-                            item.med_name,
-                        status:
-                            item.status ===
-                                "taken"
-                                ? "Sudah Minum"
-                                : "Belum Minum",
-                    }))
+                (Array.isArray(data.today_schedule)
+                    ? data.today_schedule
+                    : []
+                ).map((item) => ({
+                    id: item.id,
+                    waktu: String(item.scheduled_time || "").slice(0, 5),
+                    namaObat: item.med_name || "Nama obat tidak tersedia",
+                    status:
+                        item.status === "taken"
+                            ? "Sudah Minum"
+                            : "Belum Minum",
+                }))
             );
 
         } catch (error) {
@@ -1073,88 +1071,88 @@ export default function DashboardPage() {
                                 </div>
 
                                 <div className="overflow-x-auto">
-                                <table className="w-full">
+                                    <table className="w-full">
 
-                                    <thead>
+                                        <thead>
 
-                                        <tr className="border-b">
+                                            <tr className="border-b">
 
-                                            <th className="py-3 text-left">
-                                                Jam
-                                            </th>
+                                                <th className="py-3 text-left">
+                                                    Jam
+                                                </th>
 
-                                            <th className="py-3 text-left">
-                                                Obat
-                                            </th>
+                                                <th className="py-3 text-left">
+                                                    Obat
+                                                </th>
 
-                                            <th className="py-3 text-center">
-                                                Status
-                                            </th>
+                                                <th className="py-3 text-center">
+                                                    Status
+                                                </th>
 
-                                        </tr>
+                                            </tr>
 
-                                    </thead>
+                                        </thead>
 
 
-                                    <tbody>
+                                        <tbody>
 
-                                        {filteredSchedule.map(
-                                            (
-                                                item
-                                            ) => (
+                                            {filteredSchedule.map(
+                                                (
+                                                    item
+                                                ) => (
 
-                                                <tr
-                                                    key={
-                                                        item.id
-                                                    }
-                                                    className="border-b"
-                                                >
-
-                                                    <td className="py-4">
-                                                        {
-                                                            item.waktu
+                                                    <tr
+                                                        key={
+                                                            item.id
                                                         }
-                                                    </td>
+                                                        className="border-b"
+                                                    >
 
-                                                    <td>
-                                                        {
-                                                            item.namaObat
-                                                        }
-                                                    </td>
+                                                        <td className="py-4">
+                                                            {
+                                                                item.waktu
+                                                            }
+                                                        </td>
 
-                                                    <td className="text-center">
+                                                        <td>
+                                                            {
+                                                                item.namaObat
+                                                            }
+                                                        </td>
 
-                                                        {item.status ===
-                                                            "Belum Minum" ? (
+                                                        <td className="text-center">
 
-                                                            <button
-                                                                onClick={() =>
-                                                                    handleMinumObat(
-                                                                        item.id
-                                                                    )
-                                                                }
-                                                                className="text-red-500 font-semibold hover:underline"
-                                                            >
-                                                                Belum Minum
-                                                            </button>
+                                                            {item.status ===
+                                                                "Belum Minum" ? (
 
-                                                        ) : (
+                                                                <button
+                                                                    onClick={() =>
+                                                                        handleMinumObat(
+                                                                            item.id
+                                                                        )
+                                                                    }
+                                                                    className="text-red-500 font-semibold hover:underline"
+                                                                >
+                                                                    Belum Minum
+                                                                </button>
 
-                                                            <span className="text-blue-600 font-semibold">
-                                                                Sudah Minum
-                                                            </span>
+                                                            ) : (
 
-                                                        )}
+                                                                <span className="text-blue-600 font-semibold">
+                                                                    Sudah Minum
+                                                                </span>
 
-                                                    </td>
+                                                            )}
 
-                                                </tr>
-                                            )
-                                        )}
+                                                        </td>
 
-                                    </tbody>
+                                                    </tr>
+                                                )
+                                            )}
 
-                                </table>
+                                        </tbody>
+
+                                    </table>
                                 </div>
 
                             </div>

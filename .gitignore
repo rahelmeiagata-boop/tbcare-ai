@@ -22,3 +22,10 @@ pnpm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+ai-service/.venv/
+
+# Python temporary files
+__pycache__/
+*.py[cod]
+
+**/.venv/
